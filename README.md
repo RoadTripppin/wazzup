@@ -1,6 +1,8 @@
 # Wazzup
-WhatsApp Clone for CEN5035
+WhatsApp Clone for CEN5035.
 
+This repo contains code for the backend server.
+Client app code is in [wazzup-client](https://github.com/RoadTripppin/wazzup-client)
 ## Tech stack (to be) used
 - Go
 - React
