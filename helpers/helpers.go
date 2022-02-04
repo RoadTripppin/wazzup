@@ -1,10 +1,14 @@
 package helpers
 
 import (
+	"log"
 	"regexp"
+
+	"os"
 
 	"github.com/RoadTripppin/wazzup/interfaces"
 	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,7 +28,14 @@ func HashAndSalt(pass []byte) string {
 }
 
 func ConnectDB() *gorm.DB {
-	db, err := gorm.Open("postgres", "host=localhost port=5432 user=shashank dbname=shashank sslmode=disable")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	db_user := os.Getenv("DB_USER")
+	db_name := os.Getenv("DB_NAME")
+	db, err := gorm.Open("postgres", "host=localhost port=5432 user=" + db_user + " dbname=" + db_name + " sslmode=disable")
 	HandleErr(err)
 	return db
 }

@@ -6,11 +6,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/RoadTripppin/wazzup/helpers"
 	"github.com/RoadTripppin/wazzup/users"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 type Login struct {
@@ -73,10 +75,17 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 
 func StartApi() {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	port := os.Getenv("PORT")
 	router := mux.NewRouter()
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
-	fmt.Println("App is working on port :8888")
+	fmt.Println("App is working on port :" + port)
 	log.Fatal(http.ListenAndServe(":8888", router))
 	
 }
