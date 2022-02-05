@@ -27,3 +27,5 @@ We extensively read about the use of:
 - WEBSOCKET for web applications
 - BCRYPT for password encryption
 - POSTGRESQL as a backend database and for hosting our server
+
+Our video demo for Sprint 1: Front End: https://www.youtube.com/watch?v=KhTn3fWIcEQ and Back End: https://youtu.be/4lp5b5Q3IGg
