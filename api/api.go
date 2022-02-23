@@ -16,16 +16,16 @@ import (
 )
 
 type Login struct {
-	Username string
-	Password string
-}
-
-type Register struct {
-	Username string
 	Email string
 	Password string
 }
 
+type Register struct {
+	Name string
+	Email string
+	Password string
+	ProfilePic string
+}
 
 type ErrResponse struct {
 	Message string
@@ -39,7 +39,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	var formattedBody Login
 	err = json.Unmarshal(body, &formattedBody)
 	helpers.HandleErr(err)
-	login := users.Login(formattedBody.Username, formattedBody.Password)
+	login := users.Login(formattedBody.Email, formattedBody.Password)
 	// Prepare response
 	if login["message"] == "all is fine" {
 		resp := login
@@ -60,7 +60,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &formattedBody)
 	log.Println(formattedBody)
 	helpers.HandleErr(err)
-	register := users.Register(formattedBody.Username, formattedBody.Email, formattedBody.Password)
+	register := users.Register(formattedBody.Name, formattedBody.Email, formattedBody.Password)
 	// Prepare response
 	log.Println(register)
 	if register["message"] == "all is fine" {
@@ -81,11 +81,11 @@ func StartApi() {
 		log.Fatal("Error loading .env file")
 	}
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("SERVER_PORT")
 	router := mux.NewRouter()
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
 	fmt.Println("App is working on port :" + port)
-	log.Fatal(http.ListenAndServe(":8888", router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 	
 }

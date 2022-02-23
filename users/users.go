@@ -24,7 +24,7 @@ func prepareToken(user *interfaces.User) string {
 func prepareResponse(user *interfaces.User) map[string]interface{} {
 	responseUser := &interfaces.ResponseUser{
 		ID: user.ID,
-		Username: user.Username,
+		Name: user.Name,
 		Email: user.Email,
 	}
 
@@ -36,18 +36,18 @@ func prepareResponse(user *interfaces.User) map[string]interface{} {
 	return response
 }
 
-func Login(username string, pass string) map[string]interface{} {
+func Login(email string, pass string) map[string]interface{} {
 	// Connect DB
 	valid := helpers.Validation(
 		[]interfaces.Validation{
-			{Value: username, Valid: "username"},
+			{Value: email, Valid: "email"},
 			{Value: pass, Valid: "password"},
 		})
 	if valid {
 		// Connect DB
 		db := helpers.ConnectDB()
 		user := &interfaces.User{}
-		if db.Where("username = ? ", username).First(&user).RecordNotFound() {
+		if db.Where("email = ? ", email).First(&user).RecordNotFound() {
 			return map[string]interface{}{"message": "User not found"}
 		}
 		// Verify password
@@ -67,11 +67,11 @@ func Login(username string, pass string) map[string]interface{} {
 	}
 }
 
-func Register(username string, email string, pass string) map[string]interface{} {
+func Register(name string, email string, pass string) map[string]interface{} {
 	// Add validation to registration
 	valid := helpers.Validation(
 		[]interfaces.Validation{
-			{Value: username, Valid: "username"},
+			{Value: name, Valid: "name"},
 			{Value: email, Valid: "email"},
 			{Value: pass, Valid: "password"},
 		})
@@ -80,7 +80,7 @@ func Register(username string, email string, pass string) map[string]interface{}
 		// Connect DB
 		db := helpers.ConnectDB()
 		generatedPassword := helpers.HashAndSalt([]byte(pass))
-		user := &interfaces.User{Username: username, Email: email, Password: generatedPassword}
+		user := &interfaces.User{Name: name, Email: email, Password: generatedPassword}
 		db.Create(&user)
 
 		defer db.Close()

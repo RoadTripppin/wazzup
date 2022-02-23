@@ -10,14 +10,14 @@ func createAccounts() {
 	db := helpers.ConnectDB()
 
 	users := &[2]interfaces.User{
-		{Username: "Martin", Email: "martin@martin.com"},
-		{Username: "Michael", Email: "michael@michael.com"},
+		{Name: "Martin", Email: "martin@martin.com"},
+		{Name: "Michael", Email: "michael@michael.com"},
 	}
 
 	for i := 0; i < len(users); i++ {
 		// Correct one way
-		generatedPassword := helpers.HashAndSalt([]byte(users[i].Username))
-		user := &interfaces.User{Username: users[i].Username, Email: users[i].Email, Password: generatedPassword}
+		generatedPassword := helpers.HashAndSalt([]byte(users[i].Name))
+		user := &interfaces.User{Name: users[i].Name, Email: users[i].Email, Password: generatedPassword}
 		db.Create(&user)
 	}
 	defer db.Close()

@@ -4,14 +4,14 @@ import "github.com/jinzhu/gorm"
 
 type User struct {
 	gorm.Model
-	Username string
+	Name string
 	Email string
 	Password string
 }
 
 type ResponseUser struct {
 	ID uint
-	Username string
+	Name string
 	Email string
 }
 
