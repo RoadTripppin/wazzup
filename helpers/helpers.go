@@ -35,7 +35,10 @@ func ConnectDB() *gorm.DB {
 
 	db_user := os.Getenv("DB_USER")
 	db_name := os.Getenv("DB_NAME")
-	db, err := gorm.Open("postgres", "host=localhost port=5432 user=" + db_user + " dbname=" + db_name + " sslmode=disable")
+	db_host := os.Getenv("DB_HOST")
+	db_password := os.Getenv("DB_PASSWORD")
+	// db, err := gorm.Open("postgres", "host=localhost port=5432 user=" + db_user + " dbname=" + db_name + " sslmode=disable")
+	db, err := gorm.Open("postgres", "host=" + db_host + " port=5432 user=" + db_user + " password=" + db_password +" dbname=" + db_name + " sslmode=require")
 	HandleErr(err)
 	return db
 }
