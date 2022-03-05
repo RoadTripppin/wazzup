@@ -9,34 +9,19 @@ import (
 	"os"
 
 	"github.com/RoadTripppin/wazzup/helpers"
+	"github.com/RoadTripppin/wazzup/models"
 	"github.com/RoadTripppin/wazzup/users"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
-type Login struct {
-	Email string
-	Password string
-}
-
-type Register struct {
-	Name string
-	Email string
-	Password string
-	ProfilePic string
-}
-
-type ErrResponse struct {
-	Message string
-}
-
 func login(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	body, err := ioutil.ReadAll(r.Body)
 	helpers.HandleErr(err)
 	// Handle Login
-	var formattedBody Login
+	var formattedBody models.Login
 	err = json.Unmarshal(body, &formattedBody)
 	helpers.HandleErr(err)
 	login := users.Login(formattedBody.Email, formattedBody.Password)
@@ -46,7 +31,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 		// Handle error in else
 	} else {
-		resp := ErrResponse{Message: "Wrong username or password"}
+		resp := models.ErrResponse{Message: "Wrong username or password"}
 		json.NewEncoder(w).Encode(resp)
 	}
 }
@@ -56,7 +41,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	helpers.HandleErr(err)
 	// Handle registration
-	var formattedBody Register
+	var formattedBody models.Register
 	err = json.Unmarshal(body, &formattedBody)
 	log.Println(formattedBody)
 	helpers.HandleErr(err)
@@ -68,11 +53,10 @@ func register(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 		// Handle error in else
 	} else {
-		resp := ErrResponse{Message: "Wrong username or password"}
+		resp := models.ErrResponse{Message: "Wrong username or password"}
 		json.NewEncoder(w).Encode(resp)
 	}
 }
-
 
 func StartApi() {
 	err := godotenv.Load()
@@ -87,5 +71,5 @@ func StartApi() {
 	router.HandleFunc("/register", register).Methods("POST")
 	fmt.Println("App is working on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
-	
+
 }
