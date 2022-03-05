@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/RoadTripppin/wazzup/helpers"
@@ -11,43 +9,42 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	// Read body
-	body, err := ioutil.ReadAll(r.Body)
-	helpers.HandleErr(err)
-	// Handle Login
-	var formattedBody models.Login
-	err = json.Unmarshal(body, &formattedBody)
-	helpers.HandleErr(err)
-	login := helpers.Login(formattedBody.Email, formattedBody.Password)
-	// Prepare response
-	if login["message"] == "all is fine" {
-		resp := login
+	w.Header().Set("Content-Type", "application/json")
+
+	var login models.Login
+	_ = json.NewDecoder(r.Body).Decode(&login)
+
+	loginUser := helpers.Login(login.Email, login.Password)
+
+	if loginUser["message"] == "all is fine" {
+		resp := loginUser
+		resp["message"] = "User Login Successful"
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
-		// Handle error in else
 	} else {
-		resp := models.ErrResponse{Message: "Wrong username or password"}
+		resp := models.ErrResponse{Message: "Incorrect Credentials"}
+		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(resp)
 	}
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	// Read body
-	body, err := ioutil.ReadAll(r.Body)
-	helpers.HandleErr(err)
-	// Handle registration
-	var formattedBody models.Register
-	err = json.Unmarshal(body, &formattedBody)
-	log.Println(formattedBody)
-	helpers.HandleErr(err)
-	register := helpers.Register(formattedBody.Name, formattedBody.Email, formattedBody.Password)
+	w.Header().Set("Content-Type", "application/json")
+
+	var register models.Register
+	_ = json.NewDecoder(r.Body).Decode(&register)
+
+	registerUser := helpers.Register(register.Name, register.Email, register.Password, register.ProfilePic)
 	// Prepare response
-	log.Println(register)
-	if register["message"] == "all is fine" {
-		resp := register
+	if registerUser["message"] == "all is fine" {
+		resp := registerUser
+		resp["message"] = "User registered succesfully"
+		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(resp)
 		// Handle error in else
 	} else {
-		resp := models.ErrResponse{Message: "Wrong username or password"}
+		resp := models.ErrResponse{Message: "Incorrect Details"}
+		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(resp)
 	}
 }
