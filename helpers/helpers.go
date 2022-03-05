@@ -6,7 +6,7 @@ import (
 
 	"os"
 
-	"github.com/RoadTripppin/wazzup/interfaces"
+	"github.com/RoadTripppin/wazzup/models"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -43,7 +43,7 @@ func ConnectDB() *gorm.DB {
 	return db
 }
 
-func Validation(values []interfaces.Validation) bool{
+func Validation(values []models.Validation) bool{
 	name := regexp.MustCompile(`^([A-Za-z]{2,})+$`)
 	email := regexp.MustCompile(`^[A-Za-z0-9]+[@]+[A-Za-z0-9]+[.]+[A-Za-z]+$`)
 
