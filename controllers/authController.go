@@ -8,7 +8,6 @@ import (
 
 	"github.com/RoadTripppin/wazzup/helpers"
 	"github.com/RoadTripppin/wazzup/models"
-	"github.com/RoadTripppin/wazzup/users"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +18,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var formattedBody models.Login
 	err = json.Unmarshal(body, &formattedBody)
 	helpers.HandleErr(err)
-	login := users.Login(formattedBody.Email, formattedBody.Password)
+	login := helpers.Login(formattedBody.Email, formattedBody.Password)
 	// Prepare response
 	if login["message"] == "all is fine" {
 		resp := login
@@ -40,7 +39,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &formattedBody)
 	log.Println(formattedBody)
 	helpers.HandleErr(err)
-	register := users.Register(formattedBody.Name, formattedBody.Email, formattedBody.Password)
+	register := helpers.Register(formattedBody.Name, formattedBody.Email, formattedBody.Password)
 	// Prepare response
 	log.Println(register)
 	if register["message"] == "all is fine" {
