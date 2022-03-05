@@ -1,12 +1,51 @@
 package helpers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/RoadTripppin/wazzup/models"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func prepareToken(userID string) string {
+	tokenContent := jwt.MapClaims{
+		"user_id": userID,
+		"expiry":  time.Now().Add(time.Hour * 60).Unix(),
+	}
+	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tokenContent)
+	token, err := jwtToken.SignedString([]byte("TokenPassword"))
+	HandleErr(err)
+
+	return token
+}
+
+func decodeToken(token string) string {
+	tkn, err := jwt.Parse(token, func(tkn *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := tkn.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Error: unexpected signing method: %v", tkn.Header["alg"])
+		}
+
+		return []byte("TokenPassword"), nil
+	})
+
+	if err != nil {
+		return err.Error()
+	} else if !tkn.Valid {
+		return "Error: Invalid token"
+	}
+
+	var user string
+	if claims, ok := tkn.Claims.(jwt.MapClaims); ok && tkn.Valid {
+		user = claims["user_id"].(string)
+	} else {
+		fmt.Println(err)
+	}
+
+	return user
+}
 
 func Login(email string, pass string) map[string]interface{} {
 	// Connect DB
@@ -74,30 +113,3 @@ func Register(name string, email string, pass string, pic string) map[string]int
 		return map[string]interface{}{"message": "Invalid value"}
 	}
 }
-
-func prepareToken(userID string) string {
-	tokenContent := jwt.MapClaims{
-		"user_id": userID,
-		"expiry":  time.Now().Add(time.Hour * 60).Unix(),
-	}
-	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tokenContent)
-	token, err := jwtToken.SignedString([]byte("TokenPassword"))
-	HandleErr(err)
-
-	return token
-}
-
-// func prepareResponse(user *models.User) map[string]interface{} {
-// 	responseUser := map[string]interface{}{
-// 		"ID":    user.ID,
-// 		"Name":  user.Name,
-// 		"Email": user.Email,
-// 	}
-
-// 	var token = prepareToken(user)
-// 	var response = map[string]interface{}{"message": "all is fine"}
-// 	response["token"] = token
-// 	response["user"] = responseUser
-
-// 	return response
-// }
