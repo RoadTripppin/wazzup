@@ -174,3 +174,29 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 		return map[string]interface{}{"message": "Invalid  value"}
 	}
 }
+
+func DeleteUser(token string, body *models.Register) map[string]interface{} {
+	usr := decodeToken(token)
+
+	if strings.Contains(usr, "Error") {
+		return map[string]interface{}{
+			"message": usr,
+		}
+	}
+
+	db := ConnectDB()
+	user1 := &models.User{}
+	if db.Where("id = ? ", usr).First(&user1).RecordNotFound() {
+		return map[string]interface{}{"message": "User not found"}
+	}
+
+	if dbc := db.Delete(&user1); dbc.Error != nil {
+		return map[string]interface{}{
+			"message": "Error while deleting user",
+		}
+	}
+
+	return map[string]interface{}{
+		"message": "User deleted successfully",
+	}
+}

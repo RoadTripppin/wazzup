@@ -75,3 +75,23 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 	}
 }
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var body models.Register
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, " ")
+	reqToken = splitToken[1]
+
+	updatedUser := helpers.DeleteUser(reqToken, &body)
+	if updatedUser["message"] == "all is fine" {
+		resp := updatedUser
+		fmt.Printf("hello")
+		resp["message"] = "User Updated Successfully"
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
+	}
+}

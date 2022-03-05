@@ -31,6 +31,7 @@ func StartApi() {
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
 	router.HandleFunc("/register", controllers.Register).Methods("POST")
 	router.HandleFunc("/user/update", controllers.UpdateUser).Methods("POST")
+	router.HandleFunc("/user/delete", controllers.DeleteUser).Methods("POST")
 
 	port := os.Getenv("SERVER_PORT")
 	fmt.Println("App is working on port :" + port)
