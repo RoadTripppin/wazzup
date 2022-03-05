@@ -8,6 +8,7 @@ import (
 
 	"github.com/RoadTripppin/wazzup/controllers"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -19,11 +20,19 @@ func StartApi() {
 		log.Fatal("Error loading .env file")
 	}
 
-	port := os.Getenv("SERVER_PORT")
 	router := mux.NewRouter()
+
+	// CORS Handler
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	originsOk := handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
+
+	//routes
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
 	router.HandleFunc("/register", controllers.Register).Methods("POST")
+
+	port := os.Getenv("SERVER_PORT")
 	fmt.Println("App is working on port :" + port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(headersOk, methodsOk, originsOk)(router)))
 
 }
