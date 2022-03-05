@@ -43,25 +43,25 @@ func ConnectDB() *gorm.DB {
 	return db
 }
 
-func Validation(values []models.Validation) bool{
-	name := regexp.MustCompile(`^[a-zA-Z]+(\s[a-zA-Z]+)?$`)
+func Validation(values []models.Validation) (bool, string) {
+	name := regexp.MustCompile(`^[a-zA-Z]+(\s[a-zA-Z]+)?$	`)
 	email := regexp.MustCompile(`^[A-Za-z0-9]+[@]+[A-Za-z0-9]+[.]+[A-Za-z]+$`)
 
 	for i := 0; i < len(values); i++ {
 		switch values[i].Valid {
-			case "name":
-				if !name.MatchString(values[i].Value) {
-					return false
-				}
-			case "email":
-				if !email.MatchString(values[i].Value) {
-					return false
-				}
-			case "password":
-				if len(values[i].Value) < 5 {
-					return false
-				}
+		case "name":
+			if !name.MatchString(values[i].Value) {
+				return false, "name"
+			}
+		case "email":
+			if !email.MatchString(values[i].Value) {
+				return false, "email"
+			}
+		case "password":
+			if len(values[i].Value) < 5 {
+				return false, "password"
+			}
 		}
 	}
-	return true
+	return true, ""
 }

@@ -50,7 +50,7 @@ func decodeToken(token string) string {
 
 func Login(email string, pass string) map[string]interface{} {
 	// Connect DB
-	valid := Validation(
+	valid, field := Validation(
 		[]models.Validation{
 			{Value: email, Valid: "email"},
 			{Value: pass, Valid: "password"},
@@ -76,13 +76,13 @@ func Login(email string, pass string) map[string]interface{} {
 
 		return response
 	} else {
-		return map[string]interface{}{"message": "Invalid value"}
+		return map[string]interface{}{"message": "Invalid " + field + " value"}
 	}
 }
 
 func Register(name string, email string, pass string, pic string) map[string]interface{} {
 	// Add validation to registration
-	valid := Validation(
+	valid, field := Validation(
 		[]models.Validation{
 			{Value: name, Valid: "name"},
 			{Value: email, Valid: "email"},
@@ -111,7 +111,7 @@ func Register(name string, email string, pass string, pic string) map[string]int
 
 		return response
 	} else {
-		return map[string]interface{}{"message": "Invalid value"}
+		return map[string]interface{}{"message": "Invalid " + field + " value"}
 	}
 }
 
@@ -126,7 +126,7 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 
 	db := ConnectDB()
 
-	valid := Validation(
+	valid, field := Validation(
 		[]models.Validation{
 			{Value: body.Name, Valid: "name"},
 			{Value: body.Email, Valid: "email"},
@@ -171,7 +171,7 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 			"user":    updatedUser,
 		}
 	} else {
-		return map[string]interface{}{"message": "Invalid  value"}
+		return map[string]interface{}{"message": "Invalid " + field + " value"}
 	}
 }
 
