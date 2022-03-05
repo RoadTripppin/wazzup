@@ -1,6 +1,7 @@
 package users
 
 import (
+	"os"
 	"time"
 
 	"github.com/RoadTripppin/wazzup/helpers"
@@ -12,10 +13,10 @@ import (
 func prepareToken(user *interfaces.User) string {
 	tokenContent := jwt.MapClaims{
 		"user_id": user.ID,
-		"expiry": time.Now().Add(time.Minute * 60).Unix(),
+		"expiry":  time.Now().Add(time.Minute * 60).Unix(),
 	}
 	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tokenContent)
-	token, err := jwtToken.SignedString([]byte("TokenPassword"))
+	token, err := jwtToken.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	helpers.HandleErr(err)
 
 	return token
@@ -23,12 +24,12 @@ func prepareToken(user *interfaces.User) string {
 
 func prepareResponse(user *interfaces.User) map[string]interface{} {
 	responseUser := &interfaces.ResponseUser{
-		ID: user.ID,
-		Name: user.Name,
+		ID:    user.ID,
+		Name:  user.Name,
 		Email: user.Email,
 	}
 
-	var token = prepareToken(user);
+	var token = prepareToken(user)
 	var response = map[string]interface{}{"message": "all is fine"}
 	response["jwt"] = token
 	response["data"] = responseUser
@@ -59,7 +60,7 @@ func Login(email string, pass string) map[string]interface{} {
 
 		defer db.Close()
 
-		var response = prepareResponse(user);
+		var response = prepareResponse(user)
 
 		return response
 	} else {
@@ -90,5 +91,5 @@ func Register(name string, email string, pass string) map[string]interface{} {
 	} else {
 		return map[string]interface{}{"message": "not valid values"}
 	}
-	
+
 }
