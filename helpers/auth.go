@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/RoadTripppin/wazzup/models"
@@ -111,5 +112,65 @@ func Register(name string, email string, pass string, pic string) map[string]int
 		return response
 	} else {
 		return map[string]interface{}{"message": "Invalid value"}
+	}
+}
+
+func UpdateUser(token string, body *models.Register) map[string]interface{} {
+	usr := decodeToken(token)
+
+	if strings.Contains(usr, "Error") {
+		return map[string]interface{}{
+			"message": usr,
+		}
+	}
+
+	db := ConnectDB()
+
+	valid := Validation(
+		[]models.Validation{
+			{Value: body.Name, Valid: "name"},
+			{Value: body.Email, Valid: "email"},
+			{Value: body.Password, Valid: "password"},
+		})
+
+	if valid {
+		user1 := &models.User{}
+		if db.Where("id = ? ", usr).First(&user1).RecordNotFound() {
+			return map[string]interface{}{"message": "User not found"}
+		}
+
+		user2 := &models.User{}
+		db.Where("email = ? ", body.Email).First(&user2)
+
+		if user1.ID != user2.ID {
+			return map[string]interface{}{"message": "Email already in use. Use different email"}
+		}
+
+		user1.Name = body.Name
+		user1.Email = body.Email
+		if user1.Password != body.Password {
+			user1.Password = HashAndSalt([]byte(body.Password))
+		}
+		user1.ProfilePic = body.ProfilePic
+
+		if dbc := db.Model(&user1).Updates(&user1); dbc.Error != nil {
+			fmt.Printf(dbc.Error.Error())
+			return map[string]interface{}{"message": "Error while updating user"}
+			// response["userID"] = usr
+		}
+
+		updatedUser := map[string]interface{}{
+			"name":       user1.Name,
+			"email":      user1.Email,
+			"password":   user1.Password,
+			"profilepic": user1.ProfilePic,
+		}
+
+		return map[string]interface{}{
+			"message": "all is fine",
+			"user":    updatedUser,
+		}
+	} else {
+		return map[string]interface{}{"message": "Invalid  value"}
 	}
 }
