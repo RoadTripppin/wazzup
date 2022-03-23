@@ -8,9 +8,9 @@ Client app code is in [wazzup-client](https://github.com/RoadTripppin/wazzup-cli
 - React
 
 ## Authors
-| Name | GitHub ID |
-|------|-----------|
-|Aditya Subramanian|adiSuper94|
-|Ashwin Gopinath|ashwin2303|
-|Adish Someshwar Rao|AdishRao|
-|Shashank Bhat|shashankbhat10|
+| Name | GitHub ID | Dev Type |
+|------|-----------|----------|
+|Aditya Subramanian|adiSuper94|Frontend|
+|Ashwin Gopinath|ashwin2303|Backend|
+|Adish Someshwar Rao|AdishRao|Frontend|
+|Shashank Bhat|shashankbhat10|Backend|
