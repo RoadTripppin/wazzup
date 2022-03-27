@@ -7,18 +7,14 @@ import (
 	"os"
 
 	"github.com/RoadTripppin/wazzup/controllers"
+	"github.com/RoadTripppin/wazzup/helpers"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 )
 
 func StartApi() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	helpers.LoadEnv()
 
 	router := mux.NewRouter()
 

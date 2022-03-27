@@ -89,15 +89,19 @@ func Register(name string, email string, pass string, pic string) map[string]int
 			{Value: pass, Valid: "password"},
 		})
 
+	fmt.Printf("%t", valid)
 	if valid {
 		// Create registration logic
 		// Connect DB
 		db := ConnectDB()
-		User := &models.User{}
-		db.AutoMigrate(&User)
+		// User := &models.User{}
+		// db.AutoMigrate(&User)
 		generatedPassword := HashAndSalt([]byte(pass))
 		user := &models.User{Name: name, Email: email, Password: generatedPassword, ProfilePic: pic}
+
+		fmt.Printf("Here1")
 		db.Create(&user)
+		fmt.Printf("Here")
 
 		// Error handling for creation ---------
 		// var errMessage = createdUser.Error
@@ -197,6 +201,6 @@ func DeleteUser(token string, body *models.Register) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"message": "User deleted successfully",
+		"message": "all is fine",
 	}
 }

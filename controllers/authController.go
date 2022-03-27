@@ -45,7 +45,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 		// Handle error in else
 	} else {
-		resp := models.ErrResponse{Message: "Incorrect Details"}
+		// resp := models.ErrResponse{Message: "Incorrect Details"}
+		resp := registerUser
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(resp)
 	}
@@ -86,12 +87,15 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	splitToken := strings.Split(reqToken, " ")
 	reqToken = splitToken[1]
 
-	updatedUser := helpers.DeleteUser(reqToken, &body)
-	if updatedUser["message"] == "all is fine" {
-		resp := updatedUser
-		fmt.Printf("hello")
-		resp["message"] = "User Updated Successfully"
+	deletedUser := helpers.DeleteUser(reqToken, &body)
+	if deletedUser["message"] == "all is fine" {
+		resp := deletedUser
+		resp["message"] = "User Deleted Successfully"
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
+	} else {
+		resp := models.ErrResponse{Message: deletedUser["message"].(string)}
+		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(resp)
 	}
 }
