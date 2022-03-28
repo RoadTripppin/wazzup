@@ -24,6 +24,7 @@ func StartApi() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
 
 	//routes
+	router.HandleFunc("/ws", controllers.ServeWs)
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
 	router.HandleFunc("/register", controllers.Register).Methods("POST")
 	router.HandleFunc("/user/update", controllers.UpdateUser).Methods("POST")
@@ -32,5 +33,4 @@ func StartApi() {
 	port := os.Getenv("SERVER_PORT")
 	fmt.Println("App is working on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(headersOk, methodsOk, originsOk)(router)))
-
 }
