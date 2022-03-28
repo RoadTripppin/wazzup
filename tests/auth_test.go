@@ -59,3 +59,20 @@ func TestLoginFailureWithInvalidPassword(t *testing.T) {
 			status, http.StatusUnauthorized)
 	}
 }
+
+func TestLoginFailureWithEmptyEmail(t *testing.T) {
+	var body = []byte(`{"email":"","password": "test123"}`)
+
+	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Login)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusUnauthorized)
+	}
+}
