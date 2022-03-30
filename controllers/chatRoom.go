@@ -1,9 +1,15 @@
 package controllers
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type Room struct {
-	name       string
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Private    bool      `json:"private"`
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
@@ -11,9 +17,11 @@ type Room struct {
 }
 
 // NewRoom creates a new Room
-func NewRoom(name string) *Room {
+func NewRoom(name string, private bool) *Room {
 	return &Room{
-		name:       name,
+		ID:         uuid.New(),
+		Name:       name,
+		Private:    private,
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -39,7 +47,9 @@ func (room *Room) RunRoom() {
 }
 
 func (room *Room) registerClientInRoom(client *Client) {
-	room.notifyClientJoined(client)
+	if !room.Private {
+		room.notifyClientJoined(client)
+	}
 	room.clients[client] = true
 }
 
@@ -60,13 +70,17 @@ const welcomeMessage = "%s joined the room"
 func (room *Room) notifyClientJoined(client *Client) {
 	message := &Message{
 		Action:  SendMessageAction,
-		Target:  room.name,
+		Target:  room,
 		Message: fmt.Sprintf(welcomeMessage, client.GetName()),
 	}
 
 	room.broadcastToClientsInRoom(message.encode())
 }
 
+func (room *Room) GetId() string {
+	return room.ID.String()
+}
+
 func (room *Room) GetName() string {
-	return room.name
+	return room.Name
 }
