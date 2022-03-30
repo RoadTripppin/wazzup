@@ -23,3 +23,19 @@ func prepareAuthResponse(user *models.User) map[string]interface{} {
 
 	return response
 }
+
+func prepareGetUserResponse(user *models.User) map[string]interface{} {
+	userData := map[string]interface{}{
+		"id":         user.ID,
+		"name":       user.Name,
+		"email":      user.Email,
+		"profilepic": user.ProfilePic,
+	}
+
+	var response = map[string]interface{}{
+		"message": "all is fine",
+		"user":    userData,
+	}
+
+	return response
+}
