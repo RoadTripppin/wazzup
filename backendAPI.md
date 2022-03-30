@@ -40,21 +40,24 @@
 ## loginAPI
 
 Users can login to the application  
-**Method**:POST  
-**URL**:http://localhost:8000/login
+**Method**: POST  
+**URL**: http://localhost:8000/login <br />
 **Auth required**: Need JWT token  
 If login error
 
 ```
+Status Code: 401
+Response:
 {
   "message": "Incorrect Credentials",
-  "code":    401,
 }
 ```
 
 If login success
 
 ```
+ Status Code: 200
+ Response:
 {
  "message": "User Login Successful",
  "token": <JWT Token>,
@@ -65,7 +68,6 @@ If login success
    "password": <Encrypted Password>,
    "profilepic": <Image as string>,
  }
- "code":    200,
 }
 ```
 
