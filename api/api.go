@@ -31,6 +31,7 @@ func StartApi() {
 		controllers.ServeWs(wsServer, w, r)
 	})
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
+	router.HandleFunc("/user", controllers.GetUser).Methods("GET")
 	router.HandleFunc("/register", controllers.Register).Methods("POST")
 	router.HandleFunc("/user/update", controllers.UpdateUser).Methods("POST")
 	router.HandleFunc("/user/delete", controllers.DeleteUser).Methods("POST")
