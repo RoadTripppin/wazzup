@@ -17,6 +17,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/lib/pq v1.1.1 // indirect
-	github.com/mattn/go-sqlite3 v1.14.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.12 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
 )
