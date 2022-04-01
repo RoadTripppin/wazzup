@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/RoadTripppin/wazzup/config"
 	"github.com/RoadTripppin/wazzup/controllers"
 	"github.com/RoadTripppin/wazzup/helpers"
 
@@ -38,4 +39,7 @@ func StartApi() {
 	port := os.Getenv("SERVER_PORT")
 	fmt.Println("App is working on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(headersOk, methodsOk, originsOk)(router)))
+
+	db := config.InitDB()
+	defer db.Close()
 }

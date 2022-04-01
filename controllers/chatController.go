@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/RoadTripppin/wazzup/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -224,7 +225,7 @@ func (client *Client) handleJoinRoomPrivateMessage(message Message) {
 
 }
 
-func (client *Client) joinRoom(roomName string, sender *Client) {
+func (client *Client) joinRoom(roomName string, sender models.Users) {
 
 	room := client.wsServer.findRoomByName(roomName)
 	if room == nil {
@@ -251,7 +252,7 @@ func (client *Client) isInRoom(room *Room) bool {
 	return false
 }
 
-func (client *Client) notifyRoomJoined(room *Room, sender *Client) {
+func (client *Client) notifyRoomJoined(room *Room, sender models.Users) {
 	message := Message{
 		Action: RoomJoinedAction,
 		Target: room,
@@ -263,4 +264,8 @@ func (client *Client) notifyRoomJoined(room *Room, sender *Client) {
 
 func (client *Client) GetName() string {
 	return client.Name
+}
+
+func (client *Client) GetId() string {
+	return client.ID.String()
 }
