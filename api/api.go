@@ -19,7 +19,7 @@ func StartApi() {
 
 	router := mux.NewRouter()
 
-	wsServer := controllers.NewWebsocketServer()
+	wsServer := controllers.NewWebsocketServer(&repository.RoomRepository{Db: db}, userRepository)
 	go wsServer.Run()
 
 	// CORS Handler

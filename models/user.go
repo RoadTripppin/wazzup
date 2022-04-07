@@ -6,8 +6,8 @@ type Users interface {
 }
 
 type UserRepository interface {
-	AddUser(user User)
-	RemoveUser(user User)
-	FindUserById(ID string) User
-	GetAllUsers() []User
+	AddUser(user Users)
+	RemoveUser(user Users)
+	FindUserById(ID string) Users
+	GetAllUsers() []Users
 }
