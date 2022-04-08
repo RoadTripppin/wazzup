@@ -1,9 +1,18 @@
 package controllers
 
 import (
+	"context"
+	"encoding/json"
+	"log"
+
+	"github.com/RoadTripppin/wazzup/config"
 	"github.com/RoadTripppin/wazzup/models"
 	"github.com/google/uuid"
 )
+
+var Contex = context.Background()
+
+const PubSubGeneralChannel = "general"
 
 type WsServer struct {
 	clients        map[*Client]bool
@@ -35,6 +44,7 @@ func NewWebsocketServer(roomRepository models.RoomRepository, userRepository mod
 
 // Run our websocket server, accepting various requests
 func (server *WsServer) Run() {
+	go server.listenPubSubChannel()
 	for {
 		select {
 
@@ -51,29 +61,83 @@ func (server *WsServer) Run() {
 	}
 }
 
+func (server *WsServer) publishClientJoined(client *Client) {
+
+	message := &Message{
+		Action: UserJoinedAction,
+		Sender: client,
+	}
+
+	if err := config.Redis.Publish(Contex, PubSubGeneralChannel, message.encode()).Err(); err != nil {
+		log.Println(err)
+	}
+}
+
+func (server *WsServer) publishClientLeft(client *Client) {
+
+	message := &Message{
+		Action: UserLeftAction,
+		Sender: client,
+	}
+
+	if err := config.Redis.Publish(Contex, PubSubGeneralChannel, message.encode()).Err(); err != nil {
+		log.Println(err)
+	}
+}
+
+func (server *WsServer) listenPubSubChannel() {
+
+	pubsub := config.Redis.Subscribe(Contex, PubSubGeneralChannel)
+	ch := pubsub.Channel()
+	for msg := range ch {
+
+		var message Message
+		if err := json.Unmarshal([]byte(msg.Payload), &message); err != nil {
+			log.Printf("Error on unmarshal JSON message %s", err)
+			return
+		}
+
+		switch message.Action {
+		case UserJoinedAction:
+			server.handleUserJoined(message)
+		case UserLeftAction:
+			server.handleUserLeft(message)
+		case JoinRoomPrivateAction:
+			server.handleUserJoinPrivate(message)
+		}
+	}
+}
+
+func (server *WsServer) handleUserJoined(message Message) {
+	// Add the user to the slice
+	server.users = append(server.users, message.Sender)
+	server.broadcastToClients(message.encode())
+}
+
+func (server *WsServer) handleUserLeft(message Message) {
+	// Remove the user from the slice
+	for i, user := range server.users {
+		if user.GetId() == message.Sender.GetId() {
+			server.users[i] = server.users[len(server.users)-1]
+			server.users = server.users[:len(server.users)-1]
+		}
+	}
+	server.broadcastToClients(message.encode())
+}
+
 func (server *WsServer) registerClient(client *Client) {
 	server.userRepository.AddUser(client)
 
-	server.notifyClientJoined(client)
+	server.publishClientJoined(client)
 	server.listOnlineClients(client)
 	server.clients[client] = true
-
-	server.users = append(server.users, message.Sender)
 }
 
 func (server *WsServer) unregisterClient(client *Client) {
 	if _, ok := server.clients[client]; ok {
 		delete(server.clients, client)
-		server.notifyClientLeft(client)
-
-		for i, user := range server.users {
-			if user.GetId() == message.Sender.GetId() {
-				server.users[i] = server.users[len(server.users)-1]
-				server.users = server.users[:len(server.users)-1]
-			}
-		}
-
 		server.userRepository.RemoveUser(client)
+		server.publishClientLeft(client)
 	}
 }
 
@@ -108,24 +172,6 @@ func (server *WsServer) createRoom(name string, private bool) *Room {
 	server.rooms[room] = true
 
 	return room
-}
-
-func (server *WsServer) notifyClientJoined(client *Client) {
-	message := &Message{
-		Action: UserJoinedAction,
-		Sender: client,
-	}
-
-	server.broadcastToClients(message.encode())
-}
-
-func (server *WsServer) notifyClientLeft(client *Client) {
-	message := &Message{
-		Action: UserLeftAction,
-		Sender: client,
-	}
-
-	server.broadcastToClients(message.encode())
 }
 
 func (server *WsServer) listOnlineClients(client *Client) {
@@ -174,4 +220,24 @@ func (server *WsServer) runRoomFromRepository(name string) *Room {
 	}
 
 	return room
+}
+
+func (server *WsServer) handleUserJoinPrivate(message Message) {
+	// Find client for given user, if found add the user to the room.
+	targetClient := server.findClientByID(message.Message)
+	if targetClient != nil {
+		targetClient.joinRoom(message.Target.GetName(), message.Sender)
+	}
+}
+
+func (server *WsServer) findUserByID(ID string) models.Users {
+	var foundUser models.Users
+	for _, client := range server.users {
+		if client.GetId() == ID {
+			foundUser = client
+			break
+		}
+	}
+
+	return foundUser
 }
