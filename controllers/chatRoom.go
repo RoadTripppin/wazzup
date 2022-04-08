@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/RoadTripppin/wazzup/config"
 	"github.com/google/uuid"
 )
 
@@ -15,6 +17,8 @@ type Room struct {
 	unregister chan *Client
 	broadcast  chan *Message
 }
+
+const welcomeMessage = "%s joined the room"
 
 // NewRoom creates a new Room
 func NewRoom(name string, private bool) *Room {
@@ -31,6 +35,8 @@ func NewRoom(name string, private bool) *Room {
 
 // RunRoom runs our room, accepting various requests
 func (room *Room) RunRoom() {
+
+	go room.subscribeToRoomMessages()
 	for {
 		select {
 
@@ -41,7 +47,7 @@ func (room *Room) RunRoom() {
 			room.unregisterClientInRoom(client)
 
 		case message := <-room.broadcast:
-			room.broadcastToClientsInRoom(message.encode())
+			room.publishRoomMessage(message.encode())
 		}
 	}
 }
@@ -65,8 +71,6 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 	}
 }
 
-const welcomeMessage = "%s joined the room"
-
 func (room *Room) notifyClientJoined(client *Client) {
 	message := &Message{
 		Action:  SendMessageAction,
@@ -74,7 +78,7 @@ func (room *Room) notifyClientJoined(client *Client) {
 		Message: fmt.Sprintf(welcomeMessage, client.GetName()),
 	}
 
-	room.broadcastToClientsInRoom(message.encode())
+	room.publishRoomMessage(message.encode())
 }
 
 func (room *Room) GetId() string {
@@ -87,4 +91,22 @@ func (room *Room) GetName() string {
 
 func (room *Room) GetPrivate() bool {
 	return room.Private
+}
+
+func (room *Room) publishRoomMessage(message []byte) {
+	err := config.Redis.Publish(Contex, room.GetName(), message).Err()
+
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (room *Room) subscribeToRoomMessages() {
+	pubsub := config.Redis.Subscribe(Contex, room.GetName())
+
+	ch := pubsub.Channel()
+
+	for msg := range ch {
+		room.broadcastToClientsInRoom([]byte(msg.Payload))
+	}
 }
