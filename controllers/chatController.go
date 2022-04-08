@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"flag"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/RoadTripppin/wazzup/config"
 	"github.com/RoadTripppin/wazzup/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -31,14 +31,11 @@ var (
 	space   = []byte{' '}
 )
 
-var addr = flag.String("addr", ":8080", "http server address")
+//var addr = flag.String("addr", ":8080", "http server address")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
 }
 
 type Client struct {
@@ -210,22 +207,7 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 	room.unregister <- client
 }
 
-func (client *Client) handleJoinRoomPrivateMessage(message Message) {
-
-	target := client.wsServer.findClientByID(message.Message)
-	if target == nil {
-		return
-	}
-
-	// create unique room name combined to the two IDs
-	roomName := message.Message + client.ID.String()
-
-	client.joinRoom(roomName, target)
-	target.joinRoom(roomName, client)
-
-}
-
-func (client *Client) joinRoom(roomName string, sender models.Users) {
+func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 
 	room := client.wsServer.findRoomByName(roomName)
 	if room == nil {
@@ -234,7 +216,7 @@ func (client *Client) joinRoom(roomName string, sender models.Users) {
 
 	// Don't allow to join private rooms through public room message
 	if sender == nil && room.Private {
-		return
+		return nil
 	}
 
 	if !client.isInRoom(room) {
@@ -242,7 +224,7 @@ func (client *Client) joinRoom(roomName string, sender models.Users) {
 		room.register <- client
 		client.notifyRoomJoined(room, sender)
 	}
-
+	return room
 }
 
 func (client *Client) isInRoom(room *Room) bool {
@@ -268,4 +250,33 @@ func (client *Client) GetName() string {
 
 func (client *Client) GetId() string {
 	return client.ID.String()
+}
+
+func (client *Client) handleJoinRoomPrivateMessage(message Message) {
+	// instead of searching for a client, search for User by the given ID.
+	target := client.wsServer.findUserByID(message.Message)
+	if target == nil {
+		return
+	}
+
+	roomName := message.Message + client.ID.String()
+
+	joinedRoom := client.joinRoom(roomName, target)
+
+	if joinedRoom != nil {
+		client.inviteTargetUser(target, joinedRoom)
+	}
+}
+
+func (client *Client) inviteTargetUser(target models.Users, room *Room) {
+	inviteMessage := &Message{
+		Action:  JoinRoomPrivateAction,
+		Message: target.GetId(),
+		Target:  room,
+		Sender:  client,
+	}
+
+	if err := config.Redis.Publish(Contex, PubSubGeneralChannel, inviteMessage.encode()).Err(); err != nil {
+		log.Println(err)
+	}
 }
