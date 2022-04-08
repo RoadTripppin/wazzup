@@ -14,12 +14,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//var Contex = context.Background()
+
 func StartApi() {
 	helpers.LoadEnv()
 
+	config.CreateRedisClient()
+
+	db := config.InitDB()
+	defer db.Close()
+
 	router := mux.NewRouter()
 
-	wsServer := controllers.NewWebsocketServer(&repository.RoomRepository{Db: db}, userRepository)
+	wsServer := controllers.NewWebsocketServer(&helpers.RoomRepository{Db: db}, &helpers.UserRepository{Db: db})
 	go wsServer.Run()
 
 	// CORS Handler
@@ -28,7 +35,7 @@ func StartApi() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
 
 	//routes
-	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		controllers.ServeWs(wsServer, w, r)
 	})
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
@@ -41,6 +48,4 @@ func StartApi() {
 	fmt.Println("App is working on port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(headersOk, methodsOk, originsOk)(router)))
 
-	db := config.InitDB()
-	defer db.Close()
 }
