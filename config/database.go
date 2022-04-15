@@ -28,7 +28,10 @@ func InitDB() *sql.DB {
 	sqlStmt = ` 
     CREATE TABLE IF NOT EXISTS user (
         id VARCHAR(255) NOT NULL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL
+        name VARCHAR(255) NOT NULL,
+		email VARCHAR(255) NOT NULL,
+		password VARCHAR(255) NOT NULL,
+		profilepic VARCHAR(455) NOT NULL
     );
     `
 	_, err = db.Exec(sqlStmt)
