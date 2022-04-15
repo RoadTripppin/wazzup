@@ -35,7 +35,7 @@ func StartApi() {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
 
 	//routes
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		controllers.ServeWs(wsServer, w, r)
 	})
 	router.HandleFunc("/login", controllers.Login).Methods("POST")
