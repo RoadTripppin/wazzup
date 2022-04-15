@@ -1,22 +1,16 @@
 package helpers
 
-import (
-	"strconv"
-
-	"github.com/RoadTripppin/wazzup/models"
-)
-
-func prepareAuthResponse(user *models.User) map[string]interface{} {
+func prepareAuthResponse(user *User) map[string]interface{} {
 
 	userData := map[string]interface{}{
-		"id":         user.ID,
+		"id":         user.Id,
 		"name":       user.Name,
 		"email":      user.Email,
 		"password":   user.Password,
 		"profilepic": user.ProfilePic,
 	}
 
-	var token = prepareToken(strconv.FormatUint(uint64(user.ID), 10))
+	var token = prepareToken(user.Id)
 	var response = map[string]interface{}{"message": "all is fine"}
 	response["token"] = token
 	response["user"] = userData
@@ -24,9 +18,9 @@ func prepareAuthResponse(user *models.User) map[string]interface{} {
 	return response
 }
 
-func prepareGetUserResponse(user *models.User) map[string]interface{} {
+func prepareGetUserResponse(user *User) map[string]interface{} {
 	userData := map[string]interface{}{
-		"id":         user.ID,
+		"id":         user.Id,
 		"name":       user.Name,
 		"email":      user.Email,
 		"profilepic": user.ProfilePic,

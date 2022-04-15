@@ -1,10 +1,14 @@
 package helpers
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
+	"github.com/RoadTripppin/wazzup/config"
 	"github.com/RoadTripppin/wazzup/models"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -57,11 +61,27 @@ func Login(email string, pass string) map[string]interface{} {
 		})
 	if valid {
 		// Connect DB
-		db := ConnectDB()
-		user := &models.User{}
-		if db.Where("email = ? ", email).First(&user).RecordNotFound() {
-			return map[string]interface{}{"message": "User not found"}
+		db := config.InitDB()
+		//user := &models.User{}
+		user := &User{}
+		//db.Prepare()
+		//stmt, err := repo.Db.Prepare("INSERT INTO user(id, name) values(?,?)")
+		row := db.QueryRow("SELECT * FROM user WHERE email = ?", email)
+		//fmt.Println(row.Scan(&user.Id, &user.Name))
+		if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic); err != nil {
+			if err == sql.ErrNoRows {
+				return map[string]interface{}{"message": "User not found"}
+			}
+			//panic(err)
 		}
+		//if db.Where("email = ? ", email).First(&user).RecordNotFound() {
+		//stmt, err := db.Prepare("INSERT INTO user(id, name) values(?,?)")
+		//checkErr(err)
+
+		//_, err = stmt.Exec(user.GetId(), user.GetName())
+		//checkErr(err)
+
+		//}
 		// Verify password
 		passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pass))
 
@@ -70,6 +90,7 @@ func Login(email string, pass string) map[string]interface{} {
 		}
 
 		defer db.Close()
+		fmt.Println(user.Name)
 
 		// var response = prepareResponse(user)
 		var response = prepareAuthResponse(user)
@@ -93,14 +114,20 @@ func Register(name string, email string, pass string, pic string) map[string]int
 	if valid {
 		// Create registration logic
 		// Connect DB
-		db := ConnectDB()
+		db := config.InitDB()
+		//db := ConnectDB()
 		// User := &models.User{}
 		// db.AutoMigrate(&User)
 		generatedPassword := HashAndSalt([]byte(pass))
-		user := &models.User{Name: name, Email: email, Password: generatedPassword, ProfilePic: pic}
+		user := &User{Id: uuid.New().String(), Name: name, Email: email, Password: generatedPassword, ProfilePic: pic}
 
 		fmt.Printf("Here1")
-		db.Create(&user)
+		stmt, err := db.Prepare("INSERT INTO user(id, name, email, password, profilepic) values(?,?,?,?,?)")
+		checkErr(err)
+
+		_, err = stmt.Exec(user.Id, user.Name, user.Email, user.Password, user.ProfilePic)
+		checkErr(err)
+		//db.Create(&user)
 		fmt.Printf("Here")
 
 		// Error handling for creation ---------
