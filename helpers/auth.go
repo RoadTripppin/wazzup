@@ -110,7 +110,6 @@ func Register(name string, email string, pass string, pic string) map[string]int
 			{Value: pass, Valid: "password"},
 		})
 
-	fmt.Printf("%t", valid)
 	if valid {
 		// Create registration logic
 		// Connect DB
@@ -121,14 +120,12 @@ func Register(name string, email string, pass string, pic string) map[string]int
 		generatedPassword := HashAndSalt([]byte(pass))
 		user := &User{Id: uuid.New().String(), Name: name, Email: email, Password: generatedPassword, ProfilePic: pic}
 
-		fmt.Printf("Here1")
 		stmt, err := db.Prepare("INSERT INTO user(id, name, email, password, profilepic) values(?,?,?,?,?)")
 		checkErr(err)
 
 		_, err = stmt.Exec(user.Id, user.Name, user.Email, user.Password, user.ProfilePic)
 		checkErr(err)
 		//db.Create(&user)
-		fmt.Printf("Here")
 
 		// Error handling for creation ---------
 		// var errMessage = createdUser.Error
@@ -155,55 +152,118 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 		}
 	}
 
-	db := ConnectDB()
+	db := config.InitDB()
 
-	valid, field := Validation(
-		[]models.Validation{
-			{Value: body.Name, Valid: "name"},
-			{Value: body.Email, Valid: "email"},
-			{Value: body.Password, Valid: "password"},
-		})
+	// valid, field := Validation(
+	// 	[]models.Validation{
+	// 		{Value: body.Name, Valid: "name"},
+	// 		{Value: body.Email, Valid: "email"},
+	// 		{Value: body.Password, Valid: "password"},
+	// 	})
 
-	if valid {
-		user1 := &models.User{}
-		if db.Where("id = ? ", usr).First(&user1).RecordNotFound() {
+	// if valid {
+	user := &User{}
+
+	row := db.QueryRow("SELECT * FROM user WHERE id = ?", usr)
+	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic); err != nil {
+		if err == sql.ErrNoRows {
 			return map[string]interface{}{"message": "User not found"}
 		}
-
-		user2 := &models.User{}
-		db.Where("email = ? ", body.Email).First(&user2)
-
-		if user1.ID != user2.ID {
-			return map[string]interface{}{"message": "Email already in use. Use different email"}
-		}
-
-		user1.Name = body.Name
-		user1.Email = body.Email
-		if user1.Password != body.Password {
-			user1.Password = HashAndSalt([]byte(body.Password))
-		}
-		user1.ProfilePic = body.ProfilePic
-
-		if dbc := db.Model(&user1).Updates(&user1); dbc.Error != nil {
-			fmt.Printf(dbc.Error.Error())
-			return map[string]interface{}{"message": "Error while updating user"}
-			// response["userID"] = usr
-		}
-
-		updatedUser := map[string]interface{}{
-			"name":       user1.Name,
-			"email":      user1.Email,
-			"password":   user1.Password,
-			"profilepic": user1.ProfilePic,
-		}
-
-		return map[string]interface{}{
-			"message": "all is fine",
-			"user":    updatedUser,
-		}
-	} else {
-		return map[string]interface{}{"message": "Invalid " + field + " value"}
+		//panic(err)
 	}
+
+	// Check for empty fields
+	if body.Name == "" {
+		body.Name = user.Name
+	}
+
+	if body.ProfilePic == "" {
+		body.ProfilePic = user.ProfilePic
+	}
+
+	if body.Email == "" {
+		body.Email = user.Email
+	}
+
+	if body.Password == "" {
+		body.Password = user.Password
+	}
+	passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+
+	if passErr == bcrypt.ErrMismatchedHashAndPassword && passErr != nil {
+		fmt.Println("Updating Password")
+		body.Password = HashAndSalt([]byte(body.Password))
+	} else {
+		body.Password = user.Password
+	}
+
+	// Update Query
+	stmt, err := db.Prepare("UPDATE user set name = ?, password = ?, profilepic = ? where id = ?")
+	checkErr(err)
+	defer stmt.Close()
+
+	res, err := stmt.Exec(body.Name, body.Password, body.ProfilePic, usr)
+	checkErr(err)
+
+	affected, err := res.RowsAffected()
+	checkErr(err)
+
+	if affected != 1 {
+		return map[string]interface{}{"message": "Error while updating user"}
+	}
+
+	updatedUser := map[string]interface{}{
+		"name":       body.Name,
+		"email":      body.Email,
+		"password":   body.Password,
+		"profilepic": body.ProfilePic,
+	}
+
+	return map[string]interface{}{
+		"message": "all is fine",
+		"user":    updatedUser,
+	}
+
+	// user1 := &models.User{}
+	// if db.Where("id = ? ", usr).First(&user1).RecordNotFound() {
+	// 	return map[string]interface{}{"message": "User not found"}
+	// }
+
+	// user2 := &models.User{}
+	// db.Where("email = ? ", body.Email).First(&user2)
+
+	// if user1.ID != user2.ID {
+	// 	return map[string]interface{}{"message": "Email already in use. Use different email"}
+	// }
+
+	// user1.Name = body.Name
+	// user1.Email = body.Email
+	// if user1.Password != body.Password {
+	// 	user1.Password = HashAndSalt([]byte(body.Password))
+	// }
+	// user1.ProfilePic = body.ProfilePic
+
+	// if dbc := db.Model(&user1).Updates(&user1); dbc.Error != nil {
+	// 	fmt.Printf(dbc.Error.Error())
+	// 	return map[string]interface{}{"message": "Error while updating user"}
+	// 	// response["userID"] = usr
+	// }
+
+	// updatedUser := map[string]interface{}{
+	// 	"name":       user1.Name,
+	// 	"email":      user1.Email,
+	// 	"password":   user1.Password,
+	// 	"profilepic": user1.ProfilePic,
+	// }
+
+	// return map[string]interface{}{
+	// 	"message": "all is fine",
+	// 	"user":    updatedUser,
+	// }
+
+	// } else {
+	// 	return map[string]interface{}{"message": "Invalid " + field + " value"}
+	// }
 }
 
 func DeleteUser(token string, body *models.Register) map[string]interface{} {
