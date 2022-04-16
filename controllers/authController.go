@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -59,21 +58,27 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&user)
 
 	reqToken := r.Header.Get("Authorization")
-	splitToken := strings.Split(reqToken, " ")
-	reqToken = splitToken[1]
-
-	updatedUser := helpers.UpdateUser(reqToken, &user)
-	if updatedUser["message"] == "all is fine" {
-		fmt.Printf("123")
-		resp := updatedUser
-		fmt.Printf("hello")
-		resp["message"] = "User Updated Successfully"
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resp)
-	} else {
-		resp := models.ErrResponse{Message: updatedUser["message"].(string)}
+	if reqToken == "" {
+		resp := models.ErrResponse{Message: "No Auth token found."}
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(resp)
+	} else {
+		splitToken := strings.Split(reqToken, " ")
+		reqToken = splitToken[1]
+
+		updatedUser := helpers.UpdateUser(reqToken, &user)
+		if updatedUser["message"] == "all is fine" {
+			resp := updatedUser
+
+			resp["message"] = "User Updated Successfully"
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(resp)
+
+		} else {
+			resp := models.ErrResponse{Message: updatedUser["message"].(string)}
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(resp)
+		}
 	}
 }
 
