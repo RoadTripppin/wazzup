@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"flag"
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
-	"reflect"
 	"time"
 
+	"github.com/RoadTripppin/wazzup/config"
+	"github.com/RoadTripppin/wazzup/models"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -30,7 +31,7 @@ var (
 	space   = []byte{' '}
 )
 
-var addr = flag.String("addr", ":8080", "http server address")
+//var addr = flag.String("addr", ":8080", "http server address")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
@@ -45,13 +46,19 @@ type Client struct {
 	conn     *websocket.Conn
 	wsServer *WsServer
 	send     chan []byte
+	rooms    map[*Room]bool
+	Name     string    `json:"name"`
+	ID       uuid.UUID `json:"id"`
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
 	return &Client{
+		ID:       uuid.New(),
+		Name:     name,
 		conn:     conn,
 		wsServer: wsServer,
 		send:     make(chan []byte, 256),
+		rooms:    make(map[*Room]bool),
 	}
 }
 
@@ -73,8 +80,7 @@ func (client *Client) readPump() {
 			}
 			break
 		}
-		fmt.Println(jsonMessage)
-		client.wsServer.broadcast <- jsonMessage
+		client.handleNewMessage(jsonMessage)
 	}
 }
 
@@ -87,7 +93,6 @@ func (client *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-client.send:
-			fmt.Println("Message")
 
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
@@ -101,8 +106,6 @@ func (client *Client) writePump() {
 				return
 			}
 
-			fmt.Printf("%s\n", reflect.TypeOf(message))
-			fmt.Println(string([]byte(message[:])))
 			w.Write(message)
 
 			// Attach queued chat messages to the current websocket message.
@@ -111,8 +114,6 @@ func (client *Client) writePump() {
 				w.Write(newline)
 				w.Write(<-client.send)
 			}
-
-			fmt.Println(client.wsServer.clients)
 
 			if err := w.Close(); err != nil {
 				return
@@ -128,6 +129,9 @@ func (client *Client) writePump() {
 
 func (client *Client) disconnect() {
 	client.wsServer.unregister <- client
+	for room := range client.rooms {
+		room.unregister <- client
+	}
 	close(client.send)
 	client.conn.Close()
 }
@@ -135,19 +139,147 @@ func (client *Client) disconnect() {
 // ServeWs handles websocket requests from clients requests.
 func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 
+	name, ok := r.URL.Query()["name"]
+
+	if !ok || len(name[0]) < 1 {
+		log.Println("Url Param 'name' is missing")
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	client := newClient(conn, wsServer)
-
-	fmt.Println("New Client joined the hub!")
-	fmt.Println(client)
+	client := newClient(conn, wsServer, name[0])
 
 	go client.writePump()
 	go client.readPump()
 
 	wsServer.register <- client
+}
+
+func (client *Client) handleNewMessage(jsonMessage []byte) {
+
+	var message Message
+	if err := json.Unmarshal(jsonMessage, &message); err != nil {
+		log.Printf("Error on unmarshal JSON message %s", err)
+		return
+	}
+
+	// Attach the client object as the sender of the messsage.
+	message.Sender = client
+
+	switch message.Action {
+	case SendMessageAction:
+		// The send-message action, this will send messages to a specific room now.
+		// Which room wil depend on the message Target
+		roomID := message.Target.GetId()
+		// Use the ChatServer method to find the room, and if found, broadcast!
+		if room := client.wsServer.findRoomByID(roomID); room != nil {
+			room.broadcast <- &message
+		}
+	// We delegate the join and leave actions.
+	case JoinRoomAction:
+		client.handleJoinRoomMessage(message)
+
+	case LeaveRoomAction:
+		client.handleLeaveRoomMessage(message)
+
+	case JoinRoomPrivateAction:
+		client.handleJoinRoomPrivateMessage(message)
+	}
+}
+
+func (client *Client) handleJoinRoomMessage(message Message) {
+	roomName := message.Message
+
+	client.joinRoom(roomName, nil)
+}
+
+func (client *Client) handleLeaveRoomMessage(message Message) {
+	room := client.wsServer.findRoomByID(message.Message)
+	if room == nil {
+		return
+	}
+	if _, ok := client.rooms[room]; ok {
+		delete(client.rooms, room)
+	}
+
+	room.unregister <- client
+}
+
+func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
+
+	room := client.wsServer.findRoomByName(roomName)
+	if room == nil {
+		room = client.wsServer.createRoom(roomName, sender != nil)
+	}
+
+	// Don't allow to join private rooms through public room message
+	if sender == nil && room.Private {
+		return nil
+	}
+
+	if !client.isInRoom(room) {
+		client.rooms[room] = true
+		room.register <- client
+		client.notifyRoomJoined(room, sender)
+	}
+	return room
+}
+
+func (client *Client) isInRoom(room *Room) bool {
+	if _, ok := client.rooms[room]; ok {
+		return true
+	}
+	return false
+}
+
+func (client *Client) notifyRoomJoined(room *Room, sender models.Users) {
+	message := Message{
+		Action: RoomJoinedAction,
+		Target: room,
+		Sender: sender,
+	}
+
+	client.send <- message.encode()
+}
+
+func (client *Client) GetName() string {
+	return client.Name
+}
+
+func (client *Client) GetId() string {
+	return client.ID.String()
+}
+
+func (client *Client) handleJoinRoomPrivateMessage(message Message) {
+	// instead of searching for a client, search for User by the given ID.
+	target := client.wsServer.findUserByID(message.Message)
+	if target == nil {
+		return
+	}
+
+	roomName := message.Message + client.ID.String()
+
+	joinedRoom := client.joinRoom(roomName, target)
+
+	if joinedRoom != nil {
+		client.inviteTargetUser(target, joinedRoom)
+	}
+}
+
+func (client *Client) inviteTargetUser(target models.Users, room *Room) {
+	inviteMessage := &Message{
+		Action:  JoinRoomPrivateAction,
+		Message: target.GetId(),
+		Target:  room,
+		Sender:  client,
+	}
+
+	if err := config.Redis.Publish(Contex, PubSubGeneralChannel, inviteMessage.encode()).Err(); err != nil {
+		log.Println(err)
+	}
 }

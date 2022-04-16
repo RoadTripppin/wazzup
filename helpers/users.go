@@ -10,7 +10,7 @@ func GetUser(email string) map[string]interface{} {
 
 	if valid {
 		db := ConnectDB()
-		user := &models.User{}
+		user := &User{}
 		if db.Where("email = ? ", email).First(&user).RecordNotFound() {
 			return map[string]interface{}{"message": "User not found"}
 		}
