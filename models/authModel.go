@@ -16,6 +16,10 @@ type Login struct {
 	Password string `json:"password"`
 }
 
+type SearchBody struct {
+	Querystring string
+}
+
 type User struct {
 	gorm.Model
 	Name       string
