@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -44,4 +45,35 @@ func SearchUser(token string, query string) map[string]interface{} {
 	var response = prepareSearchUserResponse(users)
 	return response
 
+}
+
+func GetInteractedUsers(token string) map[string]interface{} {
+	usr := decodeToken(token)
+
+	if strings.Contains(usr, "Error") {
+		return map[string]interface{}{
+			"message": usr,
+		}
+	}
+
+	db := config.InitDB()
+	user := &User{}
+	fmt.Println(usr)
+	row := db.QueryRow("SELECT email, rooms FROM user WHERE id LIKE ?", usr)
+
+	if err := row.Scan(&user.Email, &user.Rooms); err != nil {
+		if err == sql.ErrNoRows {
+			return map[string]interface{}{"message": "No User found"}
+		}
+		//panic(err)
+	}
+
+	if user.Rooms == "" {
+		return map[string]interface{}{"message": "No chats found"}
+	}
+
+	rooms := strings.Split(user.Rooms, ":;;:")
+
+	var response = prepareGetInteractedUsersResponse(rooms)
+	return response
 }
