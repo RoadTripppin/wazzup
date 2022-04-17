@@ -31,7 +31,8 @@ func InitDB() *sql.DB {
         name VARCHAR(255) NOT NULL,
 		email VARCHAR(255) NOT NULL,
 		password VARCHAR(255) NOT NULL,
-		profilepic VARCHAR(455) NOT NULL
+		profilepic VARCHAR(455),
+		rooms VARCHAR(1024)
     );
     `
 	_, err = db.Exec(sqlStmt)
