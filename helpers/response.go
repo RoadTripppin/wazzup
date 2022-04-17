@@ -1,5 +1,10 @@
 package helpers
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 func prepareAuthResponse(user *User) map[string]interface{} {
 
 	userData := map[string]interface{}{
@@ -47,6 +52,38 @@ func prepareSearchUserResponse(users []User) map[string]interface{} {
 	var response = map[string]interface{}{
 		"message": "all is fine",
 		"users":   usersData,
+	}
+
+	return response
+}
+
+func prepareGetInteractedUsersResponse(rooms []string) map[string]interface{} {
+	var roomsData []map[string]interface{}
+	for _, room := range rooms {
+		var tempRoom map[string]interface{}
+		fmt.Println(room)
+		json.Unmarshal([]byte(room), &tempRoom)
+		fmt.Println(tempRoom)
+
+		roomsData = append(roomsData, tempRoom)
+	}
+
+	// st := []byte(`"{"id":"room1","name":"Nameofroom1"}:;;:{"id":"room2","name":"Nameofroom2"}"`)
+
+	// // // var temp map[string]interface{}
+	// // temp, _ := json.Marshal(st)
+	// // fmt.Println(string(temp))
+	// temp := map[string]interface{}{
+	// 	"id":   "room1",
+	// 	"name": "Name of room 1",
+	// }
+	// tempjson, _ := json.Marshal(temp)
+
+	// fmt.Println(string(tempjson))
+
+	var response = map[string]interface{}{
+		"message": "all is fine",
+		"rooms":   roomsData,
 	}
 
 	return response
