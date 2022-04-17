@@ -3,25 +3,52 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/RoadTripppin/wazzup/helpers"
 	"github.com/RoadTripppin/wazzup/models"
 )
 
-func GetUser(w http.ResponseWriter, r *http.Request) {
+func SearchUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	email := "asd"
-	userResp := helpers.GetUser(email)
+	var body models.SearchBody
 
-	if userResp["message"] == "all is fine" {
-		resp := userResp
-		resp["message"] = "Found User Successfully"
-		w.WriteHeader(http.StatusOK)
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	reqToken := r.Header.Get("Authorization")
+	if reqToken == "" {
+		resp := models.ErrResponse{Message: "No Auth token found."}
+		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(resp)
 	} else {
-		resp := models.ErrResponse{Message: "Mo User Found"}
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(resp)
+		splitToken := strings.Split(reqToken, " ")
+		reqToken = splitToken[1]
+
+		searchedUser := helpers.SearchUser(reqToken, body.Querystring)
+
+		if searchedUser["message"] == "all is fine" {
+			resp := searchedUser
+			resp["message"] = "User Found"
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(resp)
+		} else {
+			resp := models.ErrResponse{Message: "No User Found"}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(resp)
+		}
 	}
+
+	// userResp := helpers.GetUser(email)
+
+	// if userResp["message"] == "all is fine" {
+	// 	resp := userResp
+	// 	resp["message"] = "Found User Successfully"
+	// 	w.WriteHeader(http.StatusOK)
+	// 	json.NewEncoder(w).Encode(resp)
+	// } else {
+	// 	resp := models.ErrResponse{Message: "Mo User Found"}
+	// 	w.WriteHeader(http.StatusNotFound)
+	// 	json.NewEncoder(w).Encode(resp)
+	// }
 }

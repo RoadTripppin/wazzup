@@ -1,25 +1,47 @@
 package helpers
 
-import "github.com/RoadTripppin/wazzup/models"
+import (
+	"fmt"
+	"strings"
 
-func GetUser(email string) map[string]interface{} {
-	valid, field := Validation(
-		[]models.Validation{
-			{Value: email, Valid: "email"},
-		})
+	"github.com/RoadTripppin/wazzup/config"
+)
 
-	if valid {
-		db := ConnectDB()
-		user := &User{}
-		if db.Where("email = ? ", email).First(&user).RecordNotFound() {
+func SearchUser(token string, query string) map[string]interface{} {
+	usr := decodeToken(token)
+
+	if strings.Contains(usr, "Error") {
+		return map[string]interface{}{
+			"message": usr,
+		}
+	}
+
+	db := config.InitDB()
+
+	fmt.Println(query)
+	rows, err := db.Query("SELECT id, name, email FROM user WHERE email LIKE ?", "%"+query+"%")
+
+	var users []User
+	for rows.Next() {
+		var user User
+
+		err = rows.Scan(&user.Id, &user.Name, &user.Email)
+		if err != nil {
+			fmt.Println(err)
 			return map[string]interface{}{"message": "User not found"}
 		}
 
-		defer db.Close()
-
-		var response = prepareGetUserResponse(user)
-		return response
-	} else {
-		return map[string]interface{}{"message": "Invalid " + field + " value"}
+		users = append(users, user)
 	}
+
+	defer db.Close()
+
+	if users == nil {
+		return map[string]interface{}{"message": "No user found"}
+	}
+
+	fmt.Println(users)
+	var response = prepareSearchUserResponse(users)
+	return response
+
 }
