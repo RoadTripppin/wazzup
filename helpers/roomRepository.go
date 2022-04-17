@@ -30,10 +30,10 @@ type RoomRepository struct {
 
 func (repo *RoomRepository) AddRoom(room models.Room) {
 	stmt, err := repo.Db.Prepare("INSERT INTO room(id, name, private) values(?,?,?)")
-	checkErr(err)
+	CheckErr(err)
 
 	_, err = stmt.Exec(room.GetId(), room.GetName(), room.GetPrivate())
-	checkErr(err)
+	CheckErr(err)
 }
 
 func (repo *RoomRepository) FindRoomByName(name string) models.Room {
@@ -53,7 +53,7 @@ func (repo *RoomRepository) FindRoomByName(name string) models.Room {
 
 }
 
-func checkErr(err error) {
+func CheckErr(err error) {
 	if err != nil {
 		panic(err)
 	}

@@ -13,6 +13,7 @@ type User struct {
 	Email      string `json:"email"`
 	Password   string `json:"password"`
 	ProfilePic string `json:"profile"`
+	Rooms      string `json:"rooms"`
 }
 
 func (user *User) GetId() string {
@@ -29,18 +30,18 @@ type UserRepository struct {
 
 func (repo *UserRepository) AddUser(user models.Users) {
 	stmt, err := repo.Db.Prepare("INSERT INTO user(id, name) values(?,?)")
-	checkErr(err)
+	CheckErr(err)
 
 	_, err = stmt.Exec(user.GetId(), user.GetName())
-	checkErr(err)
+	CheckErr(err)
 }
 
 func (repo *UserRepository) RemoveUser(user models.Users) {
 	stmt, err := repo.Db.Prepare("DELETE FROM user WHERE id = ?")
-	checkErr(err)
+	CheckErr(err)
 
 	_, err = stmt.Exec(user.GetId())
-	checkErr(err)
+	CheckErr(err)
 }
 
 func (repo *UserRepository) FindUserById(ID string) models.Users {

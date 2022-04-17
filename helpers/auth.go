@@ -76,10 +76,10 @@ func Login(email string, pass string) map[string]interface{} {
 		}
 		//if db.Where("email = ? ", email).First(&user).RecordNotFound() {
 		//stmt, err := db.Prepare("INSERT INTO user(id, name) values(?,?)")
-		//checkErr(err)
+		//CheckErr(err)
 
 		//_, err = stmt.Exec(user.GetId(), user.GetName())
-		//checkErr(err)
+		//CheckErr(err)
 
 		//}
 		// Verify password
@@ -121,10 +121,10 @@ func Register(name string, email string, pass string, pic string) map[string]int
 		user := &User{Id: uuid.New().String(), Name: name, Email: email, Password: generatedPassword, ProfilePic: pic}
 
 		stmt, err := db.Prepare("INSERT INTO user(id, name, email, password, profilepic) values(?,?,?,?,?)")
-		checkErr(err)
+		CheckErr(err)
 
 		_, err = stmt.Exec(user.Id, user.Name, user.Email, user.Password, user.ProfilePic)
-		checkErr(err)
+		CheckErr(err)
 		//db.Create(&user)
 
 		// Error handling for creation ---------
@@ -199,14 +199,14 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 
 	// Update Query
 	stmt, err := db.Prepare("UPDATE user set name = ?, password = ?, profilepic = ? where id = ?")
-	checkErr(err)
+	CheckErr(err)
 	defer stmt.Close()
 
 	res, err := stmt.Exec(body.Name, body.Password, body.ProfilePic, usr)
-	checkErr(err)
+	CheckErr(err)
 
 	affected, err := res.RowsAffected()
-	checkErr(err)
+	CheckErr(err)
 
 	if affected != 1 {
 		return map[string]interface{}{"message": "Error while updating user"}

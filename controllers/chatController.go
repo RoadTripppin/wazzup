@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/RoadTripppin/wazzup/config"
+	"github.com/RoadTripppin/wazzup/helpers"
 	"github.com/RoadTripppin/wazzup/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -51,9 +54,9 @@ type Client struct {
 	ID       uuid.UUID `json:"id"`
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, name string, id string) *Client {
 	return &Client{
-		ID:       uuid.New(),
+		ID:       uuid.MustParse(id),
 		Name:     name,
 		conn:     conn,
 		wsServer: wsServer,
@@ -139,10 +142,11 @@ func (client *Client) disconnect() {
 // ServeWs handles websocket requests from clients requests.
 func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 
-	name, ok := r.URL.Query()["name"]
+	// name, ok := r.URL.Query()["name"]
+	user_id, ok := r.URL.Query()["ID"]
 
-	if !ok || len(name[0]) < 1 {
-		log.Println("Url Param 'name' is missing")
+	if !ok || len(user_id[0]) < 1 {
+		log.Println("Url Param 'ID' is missing")
 		return
 	}
 
@@ -152,7 +156,24 @@ func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := newClient(conn, wsServer, name[0])
+	fmt.Println(user_id[0])
+	// Get User and send required details to newClient
+	db := config.InitDB()
+	user := &helpers.User{}
+
+	row := db.QueryRow("SELECT id, name FROM user WHERE id = ?", user_id[0])
+
+	if err := row.Scan(&user.Id, &user.Name); err != nil {
+		if err == sql.ErrNoRows {
+			// panic(err)
+			log.Println("No user found")
+			return
+			// return map[string]interface{}{"message": "User not found"}
+		}
+		//panic(err)
+	}
+
+	client := newClient(conn, wsServer, user.Name, user.Id)
 
 	go client.writePump()
 	go client.readPump()
@@ -212,21 +233,62 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 
 func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 
-	room := client.wsServer.findRoomByName(roomName)
-	if room == nil {
-		room = client.wsServer.createRoom(roomName, sender != nil)
+	// Get roomname from DB instead of existing functionality
+	fmt.Println("In join room method")
+	db := config.InitDB()
+	room := &Room{}
+
+	row := db.QueryRow("SELECT id, name, private FROM room WHERE name = ?", roomName)
+
+	// var newRoom helpers.Room
+	if err := row.Scan(&room.ID, &room.Name, &room.Private); err != nil {
+		if err == sql.ErrNoRows {
+			// return map[string]interface{}{"message": "User not found"}
+
+			// If no room found, create room and insert into DB as well
+			fmt.Println("Room not found")
+			room = client.wsServer.createRoom(roomName, sender != nil)
+			// Insert room into DB
+			db := config.InitDB()
+			stmt, err := db.Prepare("INSERT INTO room(id, name, private) values(?,?,?)")
+			helpers.CheckErr(err)
+
+			_, err = stmt.Exec(room.ID.String(), room.Name, room.Private)
+			helpers.CheckErr(err)
+
+			defer db.Close()
+		}
+		//panic(err)
 	}
+	// fmt.Println(room.ID)
+	// fmt.Println(room.Name)
+	// if room == nil {
+	// room = client.wsServer.createRoom(roomName, sender != nil)
+	// }
+
+	// room := client.wsServer.findRoomByName(roomName)
+	// if room == nil {
+	// 	room = client.wsServer.createRoom(roomName, sender != nil)
+	// }
 
 	// Don't allow to join private rooms through public room message
+	fmt.Println("sender", sender.GetName())
+	fmt.Println("Room Private: ", room.Private)
 	if sender == nil && room.Private {
+		fmt.Println("Inside nil condition")
 		return nil
 	}
 
 	if !client.isInRoom(room) {
+		fmt.Println("Inside client not in room condition")
+		fmt.Println(client.Name)
 		client.rooms[room] = true
+		fmt.Println("client again", client.Name)
 		room.register <- client
+		fmt.Println(client.Name, ": Registerd in room")
 		client.notifyRoomJoined(room, sender)
 	}
+	fmt.Println("return ->", client.Name)
 	return room
 }
 
@@ -257,17 +319,44 @@ func (client *Client) GetId() string {
 
 func (client *Client) handleJoinRoomPrivateMessage(message Message) {
 	// instead of searching for a client, search for User by the given ID.
-	target := client.wsServer.findUserByID(message.Message)
-	if target == nil {
-		return
+
+	// Modify to find User from DB and use that ID..not server array
+	// message.Message here is ID as string
+	db := config.InitDB()
+	user := &helpers.User{}
+	fmt.Println("In Join Private Room method: ")
+	fmt.Println(message.Message)
+	row := db.QueryRow("SELECT id, name, email, password, profilepic FROM user WHERE id = ?", message.Message)
+
+	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic); err != nil {
+		if err == sql.ErrNoRows {
+			// return map[string]interface{}{"message": "User not found"}
+			return
+		}
+		//panic(err)
 	}
+
+	// target := client.wsServer.findUserByID(message.Message)
+	// if target == nil {
+	// 	return
+	// }
+
+	// fmt.Println(user.GetId())
+	// if target.GetId() == user.GetId() {
+	// 	fmt.Println("ID is true")
+	// }
 
 	roomName := message.Message + client.ID.String()
 
-	joinedRoom := client.joinRoom(roomName, target)
+	// joinedRoom := client.joinRoom(roomName, target)
+	joinedRoom := client.joinRoom(roomName, user)
 
 	if joinedRoom != nil {
-		client.inviteTargetUser(target, joinedRoom)
+		// client.inviteTargetUser(target, joinedRoom)
+		client.inviteTargetUser(user, joinedRoom)
+
+		// *** Update Sender and Target User's record to contain room info in DB here ***
+		log.Println(joinedRoom.Name + " : Can update this section now")
 	}
 }
 

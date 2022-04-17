@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/RoadTripppin/wazzup/config"
@@ -126,7 +127,7 @@ func (server *WsServer) handleUserLeft(message Message) {
 }
 
 func (server *WsServer) registerClient(client *Client) {
-	server.userRepository.AddUser(client)
+	// server.userRepository.AddUser(client)
 
 	server.publishClientJoined(client)
 	server.listOnlineClients(client)
@@ -164,9 +165,10 @@ func (server *WsServer) findRoomByName(name string) *Room {
 }
 
 func (server *WsServer) createRoom(name string, private bool) *Room {
+	fmt.Println("In Create Room")
 	room := NewRoom(name, private)
 
-	server.roomRepository.AddRoom(room)
+	//server.roomRepository.AddRoom(room)
 
 	go room.RunRoom()
 	server.rooms[room] = true
@@ -224,8 +226,33 @@ func (server *WsServer) runRoomFromRepository(name string) *Room {
 
 func (server *WsServer) handleUserJoinPrivate(message Message) {
 	// Find client for given user, if found add the user to the room.
+
+	// Find target from DB instead of existing method
+	// db := config.InitDB()
+	// user := &helpers.User{}
+
+	// row := db.QueryRow("SELECT id, name FROM user WHERE id = ?", message.Message)
+
+	// if err := row.Scan(&user.Id, &user.Name); err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		// panic(err)
+	// 		log.Println("No user found")
+	// 		return
+	// 		// return map[string]interface{}{"message": "User not found"}
+	// 	}
+	// 	//panic(err)
+	// }
+
+	// if user != nil {
+
+	// }
+
 	targetClient := server.findClientByID(message.Message)
+	fmt.Println("In handle user join method: ")
+	fmt.Println("target -> ", targetClient.Name)
+	fmt.Println("sender -> ", message.Sender)
 	if targetClient != nil {
+		fmt.Println("Target client found")
 		targetClient.joinRoom(message.Target.GetName(), message.Sender)
 	}
 }
