@@ -67,8 +67,8 @@ func Login(email string, pass string) map[string]interface{} {
 		//db.Prepare()
 		//stmt, err := repo.Db.Prepare("INSERT INTO user(id, name) values(?,?)")
 		row := db.QueryRow("SELECT * FROM user WHERE email = ?", email)
-		//fmt.Println(row.Scan(&user.Id, &user.Name))
-		if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic); err != nil {
+
+		if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic, &user.Rooms); err != nil {
 			if err == sql.ErrNoRows {
 				return map[string]interface{}{"message": "User not found"}
 			}
@@ -83,6 +83,7 @@ func Login(email string, pass string) map[string]interface{} {
 
 		//}
 		// Verify password
+		//fmt.Println(email)
 		passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pass))
 
 		if passErr == bcrypt.ErrMismatchedHashAndPassword && passErr != nil {
@@ -90,7 +91,6 @@ func Login(email string, pass string) map[string]interface{} {
 		}
 
 		defer db.Close()
-		fmt.Println(user.Name)
 
 		// var response = prepareResponse(user)
 		var response = prepareAuthResponse(user)
@@ -165,7 +165,7 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 	user := &User{}
 
 	row := db.QueryRow("SELECT * FROM user WHERE id = ?", usr)
-	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic); err != nil {
+	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.ProfilePic, &user.Rooms); err != nil {
 		if err == sql.ErrNoRows {
 			return map[string]interface{}{"message": "User not found"}
 		}
@@ -185,16 +185,20 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 		body.Email = user.Email
 	}
 
+	var passw string
 	if body.Password == "" {
-		body.Password = user.Password
-	}
-	passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
-
-	if passErr == bcrypt.ErrMismatchedHashAndPassword && passErr != nil {
-		fmt.Println("Updating Password")
-		body.Password = HashAndSalt([]byte(body.Password))
+		passw = user.Password
+		//body.Password = user.Password
 	} else {
-		body.Password = user.Password
+		passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+
+		if passErr == bcrypt.ErrMismatchedHashAndPassword && passErr != nil {
+			fmt.Println("Updating Password")
+			passw = HashAndSalt([]byte(body.Password))
+		} else {
+			passw = user.Password
+		}
+
 	}
 
 	// Update Query
@@ -202,7 +206,7 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 	CheckErr(err)
 	defer stmt.Close()
 
-	res, err := stmt.Exec(body.Name, body.Password, body.ProfilePic, usr)
+	res, err := stmt.Exec(body.Name, passw, body.ProfilePic, usr)
 	CheckErr(err)
 
 	affected, err := res.RowsAffected()
@@ -215,7 +219,7 @@ func UpdateUser(token string, body *models.Register) map[string]interface{} {
 	updatedUser := map[string]interface{}{
 		"name":       body.Name,
 		"email":      body.Email,
-		"password":   body.Password,
+		"password":   passw,
 		"profilepic": body.ProfilePic,
 	}
 

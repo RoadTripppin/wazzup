@@ -272,7 +272,7 @@ func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 	// }
 
 	// Don't allow to join private rooms through public room message
-	fmt.Println("sender", sender.GetName())
+	//fmt.Println("sender", sender.GetName())
 	fmt.Println("Room Private: ", room.Private)
 	if sender == nil && room.Private {
 		fmt.Println("Inside nil condition")
