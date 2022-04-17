@@ -52,3 +52,30 @@ func SearchUser(w http.ResponseWriter, r *http.Request) {
 	// 	json.NewEncoder(w).Encode(resp)
 	// }
 }
+
+func GetInteractedUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	reqToken := r.Header.Get("Authorization")
+	if reqToken == "" {
+		resp := models.ErrResponse{Message: "No Auth token found."}
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(resp)
+	} else {
+		splitToken := strings.Split(reqToken, " ")
+		reqToken = splitToken[1]
+
+		interactedUsers := helpers.GetInteractedUsers(reqToken)
+
+		if interactedUsers["message"] == "all is fine" {
+			resp := interactedUsers
+			resp["message"] = "All Chats found"
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(resp)
+		} else {
+			resp := models.ErrResponse{Message: "No interactions done"}
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(resp)
+		}
+	}
+}
