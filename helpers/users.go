@@ -20,7 +20,7 @@ func SearchUser(token string, query string) map[string]interface{} {
 	db := config.InitDB()
 
 	fmt.Println(query)
-	rows, err := db.Query("SELECT id, name, email FROM user WHERE email LIKE ?", "%"+query+"%")
+	rows, err := db.Query("SELECT id, name, email FROM user WHERE email LIKE ?", "%"+query+"%@%")
 
 	var users []User
 	for rows.Next() {
