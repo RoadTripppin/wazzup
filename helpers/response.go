@@ -18,17 +18,35 @@ func prepareAuthResponse(user *User) map[string]interface{} {
 	return response
 }
 
-func prepareGetUserResponse(user *User) map[string]interface{} {
-	userData := map[string]interface{}{
-		"id":         user.Id,
-		"name":       user.Name,
-		"email":      user.Email,
-		"profilepic": user.ProfilePic,
+func prepareSearchUserResponse(users []User) map[string]interface{} {
+	// for _, user = range users {
+
+	// }
+	// userData := map[string]interface{}{
+	// 	"id":    user.Id,
+	// 	"name":  user.Name,
+	// 	"email": user.Email,
+	// }
+
+	// userData := map[string]interface{}{
+	// 	"users": users,
+	// }
+
+	var usersData []map[string]interface{}
+
+	for _, user := range users {
+		tempuser := map[string]interface{}{
+			"id":    user.Id,
+			"name":  user.Name,
+			"email": user.Email,
+		}
+
+		usersData = append(usersData, tempuser)
 	}
 
 	var response = map[string]interface{}{
 		"message": "all is fine",
-		"user":    userData,
+		"users":   usersData,
 	}
 
 	return response
