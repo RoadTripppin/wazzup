@@ -234,32 +234,32 @@ func (client *Client) handleLeaveRoomMessage(message Message) {
 func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 
 	// Get roomname from DB instead of existing functionality
-	fmt.Println("In join room method")
-	db := config.InitDB()
-	room := &Room{}
+	// fmt.Println("In join room method")
+	// db := config.InitDB()
+	// room := &Room{}
 
-	row := db.QueryRow("SELECT id, name, private FROM room WHERE name = ?", roomName)
+	// row := db.QueryRow("SELECT id, name, private FROM room WHERE name = ?", roomName)
 
-	// var newRoom helpers.Room
-	if err := row.Scan(&room.ID, &room.Name, &room.Private); err != nil {
-		if err == sql.ErrNoRows {
-			// return map[string]interface{}{"message": "User not found"}
+	// // var newRoom helpers.Room
+	// if err := row.Scan(&room.ID, &room.Name, &room.Private); err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		// return map[string]interface{}{"message": "User not found"}
 
-			// If no room found, create room and insert into DB as well
-			fmt.Println("Room not found")
-			room = client.wsServer.createRoom(roomName, sender != nil)
-			// Insert room into DB
-			db := config.InitDB()
-			stmt, err := db.Prepare("INSERT INTO room(id, name, private) values(?,?,?)")
-			helpers.CheckErr(err)
+	// 		// If no room found, create room and insert into DB as well
+	// 		fmt.Println("Room not found")
+	// 		room = client.wsServer.createRoom(roomName, sender != nil)
+	// 		// Insert room into DB
+	// 		db := config.InitDB()
+	// 		stmt, err := db.Prepare("INSERT INTO room(id, name, private) values(?,?,?)")
+	// 		helpers.CheckErr(err)
 
-			_, err = stmt.Exec(room.ID.String(), room.Name, room.Private)
-			helpers.CheckErr(err)
+	// 		_, err = stmt.Exec(room.ID.String(), room.Name, room.Private)
+	// 		helpers.CheckErr(err)
 
-			defer db.Close()
-		}
-		//panic(err)
-	}
+	// 		defer db.Close()
+	// 	}
+	// 	//panic(err)
+	// }
 	// fmt.Println(room.ID)
 	// fmt.Println(room.Name)
 	// if room == nil {
@@ -273,6 +273,14 @@ func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 
 	// Don't allow to join private rooms through public room message
 	//fmt.Println("sender", sender.GetName())
+
+	room := client.wsServer.findRoomByName(roomName)
+
+	log.Println("In join room method")
+	if room == nil {
+		room = client.wsServer.createRoom(roomName, sender != nil)
+	}
+
 	fmt.Println("Room Private: ", room.Private)
 	if sender == nil && room.Private {
 		fmt.Println("Inside nil condition")
