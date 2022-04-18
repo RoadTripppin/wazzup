@@ -199,7 +199,20 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 		roomID := message.Target.GetId()
 		// Use the ChatServer method to find the room, and if found, broadcast!
 		if room := client.wsServer.findRoomByID(roomID); room != nil {
+			// Add timestamp to message, stringify it and then send it
+			messageText := map[string]interface{}{
+				"text":      message.Message,
+				"timestamp": time.Now(),
+			}
+
+			messageString, _ := json.Marshal(messageText)
+			message.Message = string(messageString)
+
 			room.broadcast <- &message
+
+			// Insert message object to messages column of room table
+			client.insertMessageToDB(room, message)
+
 		}
 	// We delegate the join and leave actions.
 	case JoinRoomAction:
@@ -427,5 +440,49 @@ func (client *Client) addRoomToDB(target string, room *Room) {
 	helpers.CheckErr(err)
 
 	_, err = stmt.Exec(rooms, client.GetId())
+	helpers.CheckErr(err)
+}
+
+func (client *Client) insertMessageToDB(room *Room, message Message) {
+	db := config.InitDB()
+	var messages string
+
+	roomRow := db.QueryRow("SELECT messages FROM room WHERE id = ?", room.GetId())
+	if err := roomRow.Scan(&messages); err != nil {
+		if err == sql.ErrNoRows {
+			// panic(err)
+			log.Println("No room found: while inserting image")
+			return
+			// return map[string]interface{}{"message": "User not found"}
+		}
+		//panic(err)
+	}
+
+	var messageText map[string]interface{}
+
+	if err := json.Unmarshal([]byte(message.Message), &messageText); err != nil {
+		log.Printf("Error on unmarshal JSON message %s", err)
+		return
+	}
+
+	messageData := map[string]interface{}{
+		"text":       messageText["text"],
+		"timestamp":  messageText["timestamp"],
+		"senderID":   client.GetId(),
+		"senderName": client.GetName(),
+	}
+
+	messageString, _ := json.Marshal(messageData)
+
+	if messages == "" {
+		messages = string(messageString)
+	} else {
+		messages = messages + ":;;:" + string(messageString)
+	}
+
+	stmt, err := db.Prepare("UPDATE room SET messages = ? WHERE id = ?")
+	helpers.CheckErr(err)
+
+	_, err = stmt.Exec(messages, room.GetId())
 	helpers.CheckErr(err)
 }
