@@ -288,12 +288,13 @@ func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 	}
 
 	if !client.isInRoom(room) {
-		fmt.Println("Inside client not in room condition")
 		fmt.Println(client.Name)
 		client.rooms[room] = true
-		fmt.Println("client again", client.Name)
 		room.register <- client
-		fmt.Println(client.Name, ": Registerd in room")
+
+		// Update client/user record in db to contain room info
+		client.addRoomToDB(sender.GetId(), room)
+
 		client.notifyRoomJoined(room, sender)
 	}
 	fmt.Println("return ->", client.Name)
@@ -379,4 +380,52 @@ func (client *Client) inviteTargetUser(target models.Users, room *Room) {
 	if err := config.Redis.Publish(Contex, PubSubGeneralChannel, inviteMessage.encode()).Err(); err != nil {
 		log.Println(err)
 	}
+
+}
+
+// Use this from join room to insert into DB
+func (client *Client) addRoomToDB(target string, room *Room) {
+	// Room info: {Room ID, Room Name(Sender Name), Sender Profile Pic}
+	db := config.InitDB()
+	var rooms string
+
+	roomRow := db.QueryRow("SELECT rooms FROM user WHERE id = ?", client.GetId())
+	if err := roomRow.Scan(&rooms); err != nil {
+		if err == sql.ErrNoRows {
+			// panic(err)
+			log.Println("No user found: In Join Room")
+			return
+			// return map[string]interface{}{"message": "User not found"}
+		}
+		//panic(err)
+	}
+
+	user := helpers.User{}
+	targetRow := db.QueryRow("SELECT name, profilepic FROM user WHERE id =?", target)
+	if err := targetRow.Scan(&user.Name, &user.ProfilePic); err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("No Target found: In Join Room")
+			return
+		}
+	}
+
+	roomData := map[string]interface{}{
+		"id":         room.GetId(),
+		"name":       user.Name,
+		"profilepic": user.ProfilePic,
+	}
+
+	roomString, _ := json.Marshal(roomData)
+
+	if rooms == "" {
+		rooms = string(roomString)
+	} else {
+		rooms = rooms + ":;;:" + string(roomString)
+	}
+
+	stmt, err := db.Prepare("UPDATE user SET rooms = ? WHERE id = ?")
+	helpers.CheckErr(err)
+
+	_, err = stmt.Exec(rooms, client.GetId())
+	helpers.CheckErr(err)
 }
