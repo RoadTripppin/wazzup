@@ -168,7 +168,7 @@ func (server *WsServer) createRoom(name string, private bool) *Room {
 	fmt.Println("In Create Room")
 	room := NewRoom(name, private)
 
-	//server.roomRepository.AddRoom(room)
+	server.roomRepository.AddRoom(room)
 
 	go room.RunRoom()
 	server.rooms[room] = true
@@ -248,9 +248,6 @@ func (server *WsServer) handleUserJoinPrivate(message Message) {
 	// }
 
 	targetClient := server.findClientByID(message.Message)
-	fmt.Println("In handle user join method: ")
-	fmt.Println("target -> ", targetClient.Name)
-	fmt.Println("sender -> ", message.Sender)
 	if targetClient != nil {
 		fmt.Println("Target client found")
 		targetClient.joinRoom(message.Target.GetName(), message.Sender)
