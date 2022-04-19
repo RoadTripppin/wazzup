@@ -132,10 +132,10 @@ func (client *Client) writePump() {
 }
 
 func (client *Client) disconnect() {
-	client.wsServer.unregister <- client
-	for room := range client.rooms {
-		room.unregister <- client
-	}
+	//client.wsServer.unregister <- client
+	//for room := range client.rooms {
+	//	room.unregister <- client
+	//}
 	close(client.send)
 	client.conn.Close()
 }
@@ -337,7 +337,7 @@ func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 	fmt.Println("In join room")
 	room := client.wsServer.findRoomByName(roomName)
 
-	fmt.Println("Room found: ", room.ID)
+	//fmt.Println("Room found: ", room.ID)
 	// log.Println("In join room method")
 	if room == nil {
 		room = client.wsServer.createRoom(roomName, sender != nil)
