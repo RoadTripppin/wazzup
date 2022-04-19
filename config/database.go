@@ -17,7 +17,8 @@ func InitDB() *sql.DB {
     CREATE TABLE IF NOT EXISTS room (
         id VARCHAR(255) NOT NULL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        private TINYINT NULL
+        private TINYINT NULL,
+		messages VARCHAR
     );
     `
 	_, err = db.Exec(sqlStmt)
