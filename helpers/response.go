@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 func prepareAuthResponse(user *User) map[string]interface{} {
@@ -84,6 +85,32 @@ func prepareGetInteractedUsersResponse(rooms []string) map[string]interface{} {
 	var response = map[string]interface{}{
 		"message": "all is fine",
 		"rooms":   roomsData,
+	}
+
+	return response
+}
+
+func prepareGetMessagesResponse(messages string) map[string]interface{} {
+	var messageArray []string
+	if strings.Contains(messages, ":;;:") {
+		messageArray = strings.Split(messages, ":;;:")
+	} else {
+		messageArray = append(messageArray, messages)
+	}
+
+	var messageData []map[string]interface{}
+	for _, msg := range messageArray {
+		var tempmsg map[string]interface{}
+
+		json.Unmarshal([]byte(msg), &tempmsg)
+		// fmt.Println(tempRoom)
+
+		messageData = append(messageData, tempmsg)
+	}
+
+	var response = map[string]interface{}{
+		"message": "all is fine",
+		"rooms":   messageData,
 	}
 
 	return response
