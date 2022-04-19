@@ -1,0 +1,102 @@
+On Initiating private message, client should send following websocket message:
+	message: 
+	{
+		"action": 'join-room-private',
+		"message": <User ID of target user>
+	}
+	
+Self will receive message:
+	message:
+	{
+		"action": 'room-joined',
+		"message": "",
+		"sender": 
+			{
+				id: <User Id of target user>
+				name: <Name of target user>
+			},
+		"target":
+			{
+				id: <Room id>,
+				name: <Concatenated string containing user IDs of self and target user>
+				private: true
+			}
+	}
+	
+
+Target User receives message:
+	message:
+	{
+		"action": 'room-joined',
+		"message": '',
+		"sender":
+			{
+				id: <User ID of first user>
+				name: <Name of first user>
+			},
+		"target":
+			{
+				id: <Room ID>,
+				name: <Concatenated string containing user IDs of self and target user>
+				private: true
+			}
+	}
+	
+
+===========================================================================================================
+===========================================================================================================
+===========================================================================================================
+
+On sending chat message, sender should send following websocket message:
+	message:
+	{
+		"action": 'send-message',
+		"message": <Message text>,
+		"target":
+			{
+				id: <Room ID>,
+				name: <Name of second user>
+			}
+	}
+
+
+Sender receives the following websocket message:
+	"message":
+	{
+		"action": 'send-message',
+		"message": <Message text>,
+		"sender":
+			{
+				id: <User ID of sender(in this case self)>,
+				name: <Name of sender(in this case self)>
+			},
+		"target":
+			{
+				id: <Room ID>,
+				name: <Name of second user>,
+				private: false
+			}
+	}
+	
+
+Second User receives the following websocket message:
+	message:
+	{
+		"action": 'send-message',
+		"message": <Message text>,
+		"sender":
+			{
+				id: <User ID of sender(in this case first user's id)>,
+				name: <Name of sender(in this case first user's id)>
+			},
+		"target":
+			{
+				id: <Room ID>,
+				name: <Name of second user(in this case self)>,
+				private: false
+			}
+	}
+	
+=========================================================================================
+=========================================================================================
+=========================================================================================
