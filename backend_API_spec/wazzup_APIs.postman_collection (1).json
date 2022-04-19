@@ -171,6 +171,47 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "messages",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcnkiOjE2NTA2MjgxMTksInVzZXJfaWQiOiJlOTkwNTdlZS0yMDU2LTQ2OTMtYjAyZi01YTI2Mzc4OWY5ZDkifQ.EepjLC-Zc0rzdS5InXAb086vsRdhAUs54082lYY66MY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"roomid\" : \"64e8c345-e5ce-48d9-8f01-2a83a6152f7f\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8882/messages",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8882",
+					"path": [
+						"messages"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
