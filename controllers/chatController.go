@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/RoadTripppin/wazzup/config"
@@ -179,6 +180,51 @@ func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 
 	wsServer.register <- client
+
+	// Get all rooms user is in and send joinRoom message(subscribe user to it)
+	fmt.Println("Fetching rooms to auto-join")
+	row = db.QueryRow("SELECT rooms from user where id = ?", client.GetId())
+	var rooms string
+	if err := row.Scan(&rooms); err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("No user found")
+			return
+		}
+	}
+
+	if rooms != "" {
+		var roomArray []string
+		if strings.Contains(rooms, ":;;:") {
+			fmt.Println("In split")
+			roomArray = strings.Split(rooms, ":;;:")
+		} else {
+			roomArray = append(roomArray, rooms)
+		}
+
+		for _, room := range roomArray {
+			// Get room Name from DB with room.ID
+			var roomData map[string]interface{}
+			json.Unmarshal([]byte(room), &roomData)
+			fmt.Println("Room ID: ", roomData["id"])
+
+			row = db.QueryRow("SELECT name FROM room WHERE id = ?", roomData["id"])
+
+			var roomname string
+			if err := row.Scan(&roomname); err != nil {
+				if err == sql.ErrNoRows {
+					log.Println("Error: No room found")
+					return
+				}
+			}
+
+			message := Message{
+				Message: roomname,
+			}
+			fmt.Println("Room Name: ", roomname)
+
+			client.handleJoinRoomMessage(message)
+		}
+	}
 }
 
 func (client *Client) handleNewMessage(jsonMessage []byte) {
@@ -227,6 +273,7 @@ func (client *Client) handleNewMessage(jsonMessage []byte) {
 }
 
 func (client *Client) handleJoinRoomMessage(message Message) {
+	//Will have to find room from db //
 	roomName := message.Message
 
 	client.joinRoom(roomName, nil)
@@ -287,30 +334,34 @@ func (client *Client) joinRoom(roomName string, sender models.Users) *Room {
 	// Don't allow to join private rooms through public room message
 	//fmt.Println("sender", sender.GetName())
 
+	fmt.Println("In join room")
 	room := client.wsServer.findRoomByName(roomName)
 
-	log.Println("In join room method")
+	fmt.Println("Room found: ", room.ID)
+	// log.Println("In join room method")
 	if room == nil {
 		room = client.wsServer.createRoom(roomName, sender != nil)
 	}
 
-	fmt.Println("Room Private: ", room.Private)
-	if sender == nil && room.Private {
-		fmt.Println("Inside nil condition")
-		return nil
-	}
+	// fmt.Println("Room Private: ", room.Private)
+	// if sender == nil && room.Private {
+	// 	fmt.Println("Inside nil condition")
+	// 	return nil
+	// }
 
 	if !client.isInRoom(room) {
-		fmt.Println(client.Name)
+		fmt.Println("Join Room: ", client.Name)
 		client.rooms[room] = true
 		room.register <- client
 
 		// Update client/user record in db to contain room info
-		client.addRoomToDB(sender.GetId(), room)
+		if sender != nil {
+			client.addRoomToDB(sender.GetId(), room)
 
-		client.notifyRoomJoined(room, sender)
+			client.notifyRoomJoined(room, sender)
+		}
 	}
-	fmt.Println("return ->", client.Name)
+	// fmt.Println("return ->", client.Name)
 	return room
 }
 
