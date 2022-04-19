@@ -44,6 +44,7 @@ func StartApi() {
 	router.HandleFunc("/user/update", controllers.UpdateUser).Methods("POST")
 	router.HandleFunc("/user/delete", controllers.DeleteUser).Methods("POST")
 	router.HandleFunc("/user/interacted", controllers.GetInteractedUsers).Methods("GET")
+	router.HandleFunc("/messages", controllers.GetMessages).Methods("GET")
 
 	port := os.Getenv("SERVER_PORT")
 	fmt.Println("App is working on port :" + port)

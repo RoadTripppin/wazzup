@@ -20,6 +20,16 @@ type SearchBody struct {
 	Querystring string
 }
 
+type GetRoom struct {
+	RoomID string `json:"roomid"`
+}
+
+type RoomData struct {
+	ID       string
+	Name     string
+	Messages string
+}
+
 type User struct {
 	gorm.Model
 	Name       string

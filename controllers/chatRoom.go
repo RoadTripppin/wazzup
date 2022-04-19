@@ -35,13 +35,11 @@ func NewRoom(name string, private bool) *Room {
 
 // RunRoom runs our room, accepting various requests
 func (room *Room) RunRoom() {
-	fmt.Println("IN run room")
 	go room.subscribeToRoomMessages()
 	for {
 		select {
 
 		case client := <-room.register:
-			fmt.Println(client.Name)
 			room.registerClientInRoom(client)
 
 		case client := <-room.unregister:
@@ -54,7 +52,6 @@ func (room *Room) RunRoom() {
 }
 
 func (room *Room) registerClientInRoom(client *Client) {
-	fmt.Println("In registerClientInRoom method", client.Name)
 	if !room.Private {
 		room.notifyClientJoined(client)
 	}
