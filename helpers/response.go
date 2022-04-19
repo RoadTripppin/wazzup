@@ -110,7 +110,7 @@ func prepareGetMessagesResponse(messages string) map[string]interface{} {
 
 	var response = map[string]interface{}{
 		"message": "all is fine",
-		"rooms":   messageData,
+		"chats":   messageData,
 	}
 
 	return response
