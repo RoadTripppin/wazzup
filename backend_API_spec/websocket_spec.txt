@@ -1,0 +1,54 @@
+1. Join-room-private
+
+- [ ] When sender joins a private room
+
+{
+    "action": 'join-room-private',
+	"message": "35b88491-14b8-44d4-b791-50cb22b5440a" //target user ID
+}
+
+- [ ]  Json of target user
+
+{
+    "action": "room-joined",
+    "message": "",
+    "target": { //Target Room Details
+        "id": "eab0ea13-101f-4b9c-9e08-6f1d02fe0e64", 
+        "name": "35b88491-14b8-44d4-b791-50cb22b5440a4fc46905-c2b0-4e00-9e05-2b37d1726a2f",
+        "private": true
+    },
+    "sender": { //Sender user details
+        "name": "Shash",
+        "id": "4fc46905-c2b0-4e00-9e05-2b37d1726a2f"
+    }
+}
+
+2. Send-message
+
+- [ ] When sender sends a message
+
+{
+    "action": "send-message",
+	"message": "Hey! How you doing today!?",
+	"target":
+	{
+		"id": "eab0ea13-101f-4b9c-9e08-6f1d02fe0e64",
+		"name": "Adish"
+	}
+}
+
+- [ ] Both sender and receiver receive the following json response
+
+{
+    "action": "send-message",
+    "message": "{\"text\":\"Hey! How you doing today!?\",\"timestamp\":\"2022-04-19T17:11:38.80648-04:00\"}",
+    "target": {
+        "id": "eab0ea13-101f-4b9c-9e08-6f1d02fe0e64", //Target room ID
+        "name": "Adish", //Taget user name
+        "private": false //Type of room
+    },
+    "sender": {
+        "name": "Shash", //Sender name
+        "id": "4fc46905-c2b0-4e00-9e05-2b37d1726a2f" //Sender ID
+    }
+}
