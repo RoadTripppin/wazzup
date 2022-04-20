@@ -3,9 +3,26 @@ WhatsApp Clone for CEN5035.
 
 This repo contains code for the backend server.
 Client app code is in [wazzup-client](https://github.com/RoadTripppin/wazzup-client)
+
 ## Tech stack (to be) used
 - Go
 - React
+
+## Project Description
+We have designed and developed a web-based WhatsApp Clone application called wazzup. The main goal of the application is to provide a platform for one-to-one communication among the users of the app. The application has a register function so that new users can join and a login function so that existing users can login and use the application. Passwords are encrypted using the JWT token. For each user, email ID is the primary key and is required to register and login to the application. The application provides users to do the following:
+•	Search for a user
+•	Get rooms with the users you have interacted
+•	Update user
+•	Get messages of a chat room
+•	Private chat rooms
+•	Create chat rooms
+•	Send-messages
+
+We have used Golang for backend, React for frontend and SQLlite as the storage database. 
+
+## Link to API documentation
+https://github.com/RoadTripppin/wazzup/tree/main/backend_API_spec 
+The above link provides the details of the API documentation. The wazzup_APIs.json file contains all the details of the API which have been exported from postman. For websocokets, we have written the spec in text file but provide a format for request and response data. 
 
 ## Authors
 | Name | GitHub ID | Dev Type |
