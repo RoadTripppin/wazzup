@@ -35,6 +35,7 @@ There four different projects, one for each sprint!
 
 ## Link to Sprint 4 Deliverables
 Backend: https://github.com/RoadTripppin/wazzup/blob/main/sprint4.md
+Frontend: https://github.com/RoadTripppin/wazzup-client/blob/main/Sprint4.md
 
 ## Authors
 | Name | GitHub ID | Dev Type |
