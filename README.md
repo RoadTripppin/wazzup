@@ -20,6 +20,11 @@ We have designed and developed a web-based WhatsApp Clone application called waz
 
 We have used Golang for backend, React for frontend and SQLlite as the storage database. 
 
+## Cypress Video
+
+https://user-images.githubusercontent.com/31245878/164343125-1626b5e8-84c7-4e7c-b58a-c11b74311bed.mov
+
+
 ## Link to API documentation
 https://github.com/RoadTripppin/wazzup/tree/main/backend_API_spec 
 The above link provides the details of the API documentation. The wazzup_APIs.json file contains all the details of the API which have been exported from postman. For websocokets, we have written the spec in text file but provide a format for request and response data. 
