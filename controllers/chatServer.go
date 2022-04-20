@@ -137,7 +137,7 @@ func (server *WsServer) registerClient(client *Client) {
 func (server *WsServer) unregisterClient(client *Client) {
 	if _, ok := server.clients[client]; ok {
 		delete(server.clients, client)
-		server.userRepository.RemoveUser(client)
+		//server.userRepository.RemoveUser(client)
 		server.publishClientLeft(client)
 	}
 }
