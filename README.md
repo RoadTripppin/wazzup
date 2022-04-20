@@ -24,6 +24,13 @@ We have used Golang for backend, React for frontend and SQLlite as the storage d
 https://github.com/RoadTripppin/wazzup/tree/main/backend_API_spec 
 The above link provides the details of the API documentation. The wazzup_APIs.json file contains all the details of the API which have been exported from postman. For websocokets, we have written the spec in text file but provide a format for request and response data. 
 
+## Link to Project Board
+https://github.com/orgs/RoadTripppin/projects?type=beta
+There four different projects, one for each sprint!
+
+## Link to Sprint 4 Deliverables
+Backend: https://github.com/RoadTripppin/wazzup/blob/main/sprint4.md
+
 ## Authors
 | Name | GitHub ID | Dev Type |
 |------|-----------|----------|
