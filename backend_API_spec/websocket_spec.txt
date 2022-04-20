@@ -1,3 +1,5 @@
+WebSocket URL: ws://localhost:8882/ws?ID=1b078148-3ba6-493e-a1b4-e793dfd78d50 (where ID refers to USERID)
+
 1. Join-room-private
 
 - [ ] When sender joins a private room
