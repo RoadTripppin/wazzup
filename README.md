@@ -20,9 +20,19 @@ We have designed and developed a web-based WhatsApp Clone application called waz
 
 We have used Golang for backend, React for frontend and SQLlite as the storage database. 
 
+## Demo Video
+
+
+https://user-images.githubusercontent.com/31245878/164357232-99f318ac-65d7-4e1f-a970-11af2c9ab69c.mov
+
+
 ## Cypress Video
 
 https://user-images.githubusercontent.com/31245878/164343125-1626b5e8-84c7-4e7c-b58a-c11b74311bed.mov
+
+## Backend Test Video
+
+https://user-images.githubusercontent.com/78217991/164364939-b51d59fb-b6ae-46b7-831e-fb37c8315013.mov
 
 
 ## Link to API documentation
