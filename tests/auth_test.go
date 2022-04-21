@@ -17,7 +17,7 @@ func TestRegisterSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req.Header("Authorization" : "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcnkiOjE2NTA0NTI3MDgsInVzZXJfaWQiOiI2NTY2YTlhOS01YTA2LTRhMzQtYTY1Yi02MWIxOWRjZGFiZTgifQ.zg3il-ep3wbLwIL3xudzsyayr-J9VQtmklGpYnJHuYw")
+	//req.Header("Authorization" : "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcnkiOjE2NTA0NTI3MDgsInVzZXJfaWQiOiI2NTY2YTlhOS01YTA2LTRhMzQtYTY1Yi02MWIxOWRjZGFiZTgifQ.zg3il-ep3wbLwIL3xudzsyayr-J9VQtmklGpYnJHuYw")
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(controllers.Register)
 	handler.ServeHTTP(rr, req)
