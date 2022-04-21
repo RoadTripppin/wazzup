@@ -9,8 +9,162 @@ import (
 	"github.com/RoadTripppin/wazzup/controllers"
 )
 
+func TestRegisterSuccess(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"adi@hotmail.com", "password": "98765", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header("Authorization" : "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcnkiOjE2NTA0NTI3MDgsInVzZXJfaWQiOiI2NTY2YTlhOS01YTA2LTRhMzQtYTY1Yi02MWIxOWRjZGFiZTgifQ.zg3il-ep3wbLwIL3xudzsyayr-J9VQtmklGpYnJHuYw")
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusCreated {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusCreated)
+	}
+}
+
+func TestRegisterFailureWithInvalidEmail(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"adihotmail.com", "password": "98765", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithInvalidPassword(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"adi@hotmail.com", "password": "965", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithEmptyEmail(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"", "password": "98765", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithEmptyPassword(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"adi@hotmail.com", "password": "", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithEmptyEmailAndPassword(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"", "password": "", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithNoEmail(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "password": "98765", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithNoPassword(t *testing.T) {
+	var body = []byte(`{"name":"Adi", "email":"adi@hotmail.com", "profilepic": ""}`)
+
+	req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
+func TestRegisterFailureWithNoBody(t *testing.T) {
+	// var body = []byte(`{}`)
+
+	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(controllers.Register)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusConflict {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusConflict)
+	}
+}
+
 func TestLoginSuccess(t *testing.T) {
-	var body = []byte(`{"email":"test1@gmail.com","password": "test123"}`)
+	var body = []byte(`{"email":"adi@hotmail.com","password": "98765"}`)
 
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
@@ -27,7 +181,7 @@ func TestLoginSuccess(t *testing.T) {
 }
 
 func TestLoginFailureWithInvalidEmail(t *testing.T) {
-	var body = []byte(`{"email":"test1gmail.com","password": "test123"}`)
+	var body = []byte(`{"email":"adihotmail.com","password": "98765"}`)
 
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
@@ -44,7 +198,7 @@ func TestLoginFailureWithInvalidEmail(t *testing.T) {
 }
 
 func TestLoginFailureWithInvalidPassword(t *testing.T) {
-	var body = []byte(`{"email":"test1gmail.com","password": "test"}`)
+	var body = []byte(`{"email":"adi@hotmail.com","password": "9865"}`)
 
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
@@ -61,7 +215,7 @@ func TestLoginFailureWithInvalidPassword(t *testing.T) {
 }
 
 func TestLoginFailureWithEmptyEmail(t *testing.T) {
-	var body = []byte(`{"email":"","password": "test123"}`)
+	var body = []byte(`{"email":"","password": "98765"}`)
 
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
@@ -78,7 +232,7 @@ func TestLoginFailureWithEmptyEmail(t *testing.T) {
 }
 
 func TestLoginFailureWithEmptyPassword(t *testing.T) {
-	var body = []byte(`{"email":"test1@gmail.com","password": ""}`)
+	var body = []byte(`{"email":"adi@hotmail.com","password": ""}`)
 
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
@@ -129,7 +283,7 @@ func TestLoginFailureWithNoEmail(t *testing.T) {
 }
 
 func TestLoginFailureWithNoPassword(t *testing.T) {
-	var body = []byte(`{"email": "test1@gmail.com"}`)
+	var body = []byte(`{"email": "adi@hotmail.com"}`)
 
 	req, err := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
 	if err != nil {
